@@ -5,3 +5,4 @@ bcrypt==4.1.2
 pytest==7.4.3
 httpx==0.25.1
 pydantic==2.5.0
+redis>=5.0.0
