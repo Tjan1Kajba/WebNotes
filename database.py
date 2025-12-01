@@ -10,9 +10,9 @@ def initialize_database():
             id INTEGER PRIMARY KEY,
             title TEXT NOT NULL,
             text TEXT,
-            user_id INTEGER NOT NULL,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            user_id INTEGER NOT NULL,
             FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
         )
     ''')
