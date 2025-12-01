@@ -2,3 +2,6 @@ fastapi==0.110.2
 uvicorn==0.29.0
 passlib==1.7.4
 bcrypt==4.1.2
+pytest==7.4.3
+httpx==0.25.1
+pydantic==2.5.0

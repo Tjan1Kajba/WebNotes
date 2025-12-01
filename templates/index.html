@@ -114,11 +114,11 @@
         </div>
         <script>
           function addNote() {
-            const username = "{{ username }}";
-
-            // Pošljemo obrazec asinhrono
-            fetch("/notes/?username=" + encodeURIComponent(username), {
+            fetch("/notes/", {
               method: "POST",
+              headers: {
+                "Content-Type": "application/x-www-form-urlencoded",
+              },
             })
               .then((response) => {
                 if (response.ok) {
@@ -252,7 +252,6 @@
             }),
           }).then((response) => {
             if (!response.ok) {
-              // Handle errors
               console.error("Error updating note");
             }
           });
@@ -285,10 +284,12 @@
       style="background-color: black; padding: 15px; padding-bottom: 2px"
     >
       <p style="text-align: center; color: white">
-        Beležka - Kajba - Skornšek
+        Beležka - Kajba
         <span style="right: 10px; position: absolute"
           >Dobrodošli, <b>{{ username }} </b>
-          <a style="text-decoration: underline; margin-left: 5px" href="/login/"
+          <a
+            style="text-decoration: underline; margin-left: 5px"
+            href="/logout/"
             >Odjava</a
           ></span
         >

@@ -151,9 +151,8 @@
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
     $(document).ready(function () {
-        // Login form submission
         $('#loginForm').submit(function (e) {
-            e.preventDefault(); // Prevent form submission
+            e.preventDefault(); 
             var formData = {
                 username: $('#username').val(),
                 password: $('#password').val()
@@ -165,8 +164,8 @@
                 contentType: 'application/json',
                 success: function (response) {
                     alert('Prijava je bila uspešna!');
-                    window.location.href = "/notes/?username=" + formData.username;
-                    // Redirect or perform any action after successful login
+                    window.location.href = "/notes/";
+
                 },
                 error: function (xhr, status, error) {
                     alert('Nepravilno geslo ali ime');
@@ -174,9 +173,8 @@
             });
         });
 
-        // Registration form submission
         $('#registerForm').submit(function (e) {
-            e.preventDefault(); // Prevent form submission
+            e.preventDefault(); 
             var formData = {
                 username: $('#reg_username').val(),
                 password: $('#reg_password').val()
@@ -188,7 +186,6 @@
                 contentType: 'application/json',
                 success: function (response) {
                     alert('Registration Successful');
-                    // Redirect or perform any action after successful registration
                 },
                 error: function (xhr, status, error) {
                     alert('Error: ' + xhr.responseJSON.detail);
@@ -199,7 +196,7 @@
 </script>
 <br><br>
     <footer class="fixed-bottom" style=" background-color: black;padding: 15px;padding-bottom: 2px;">
-        <p style="text-align: center; color: white;">Beležka - Kajba - Skornšek </p>
+        <p style="text-align: center; color: white;">Beležka - Kajba</p>
    
     </footer>
 </body>
