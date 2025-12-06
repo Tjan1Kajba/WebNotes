@@ -1,0 +1,71 @@
+name: Backend Tests
+
+on:
+  push:
+    branches: [main,  pre-production, production, user_managment_functionality]
+  pull_request:
+    branches: [main, pre-production, production, user_managment_functionality]
+
+jobs:
+  test-backend:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    services:
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest pytest-cov pytest-html beautifulsoup4 redis
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+      - name: Run backend tests with coverage
+        env:
+          REDIS_HOST: localhost
+          REDIS_PORT: 6379
+        run: |
+          # Kratek sleep za Redis inicializacijo
+          sleep 3
+          python -m pytest test_backend.py \
+            -v \
+            --cov=. \
+            --cov-report=html:coverage_backend_html \
+            --cov-report=xml:coverage_backend.xml \
+            --cov-report=term-missing \
+            --junitxml=test-results-backend.xml
+
+      - name: Upload backend test results
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-test-results
+          path: |
+            test-results-backend.xml
+            coverage_backend.xml
+          retention-days: 7
+
+      - name: Upload backend coverage report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: backend-coverage-report
+          path: coverage_backend_html/
+          retention-days: 7
