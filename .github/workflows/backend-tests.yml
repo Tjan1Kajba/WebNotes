@@ -3,23 +3,24 @@ name: Backend Tests
 on:
   push:
     branches: [main, master, develop]
-    paths:
-      - 'backend/**'
-      - 'test_backend.py'
-      - 'requirements.txt'
-      - 'main.py'
   pull_request:
     branches: [main, master, develop]
-    paths:
-      - 'backend/**'
-      - 'test_backend.py'
-      - 'requirements.txt'
-      - 'main.py'
 
 jobs:
   test-backend:
     runs-on: ubuntu-latest
     timeout-minutes: 10
+
+    services:
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
 
     steps:
       - name: Checkout code
@@ -38,6 +39,9 @@ jobs:
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
       - name: Run backend tests with coverage
+        env:
+          REDIS_HOST: localhost
+          REDIS_PORT: 6379
         run: |
           python -m pytest test_backend.py \
             -v \
@@ -63,9 +67,3 @@ jobs:
           name: backend-coverage-report
           path: coverage_backend_html/
           retention-days: 7
-
-      - name: Display backend coverage summary
-        run: |
-          if [ -f coverage_backend.xml ]; then
-            echo "=== Backend Coverage Summary ==="
-            python -c "
