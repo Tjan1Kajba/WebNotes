@@ -16,7 +16,6 @@ from datetime import datetime, timedelta
 
 
 initialize_database()
-
 app = FastAPI()
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
