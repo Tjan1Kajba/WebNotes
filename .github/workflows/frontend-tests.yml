@@ -2,9 +2,9 @@ name: Frontend Tests
 
 on:
   push:
-    branches: [main, master, develop]
+    branches: [main,  pre-production, production, user_managment_functionality]
   pull_request:
-    branches: [main, master, develop]
+    branches: [main,  pre-production, production, user_managment_functionality]
 
 jobs:
   test-frontend:
@@ -38,17 +38,13 @@ jobs:
           pip install pytest pytest-cov pytest-html beautifulsoup4 redis
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
-      - name: Wait for Redis to be ready
-        run: |
-          echo "Waiting for Redis..."
-          timeout 30s bash -c 'until docker exec redis redis-cli ping | grep -q PONG; do sleep 1; done'
-          echo "Redis is ready!"
-
       - name: Run frontend tests with coverage
         env:
           REDIS_HOST: localhost
           REDIS_PORT: 6379
         run: |
+          # Kratek sleep za Redis inicializacijo
+          sleep 5
           # Setup mock environment for tests
           export PYTHONPATH=$PWD
           python -m pytest test_frontend.py \
