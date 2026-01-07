@@ -8,12 +8,14 @@ from database import initialize_database
 from fastapi.responses import RedirectResponse
 from fastapi import Form
 from typing import List
-import sqlite3
+import psycopg2
+from psycopg2.extras import RealDictCursor
 import redis
 import uuid
 import json
 import os
 from datetime import datetime, timedelta
+from database import get_db_connection
 
 
 initialize_database()
@@ -28,9 +30,7 @@ USER_SESSIONS_PREFIX = "user_sessions:"
 
 
 def get_db_conn():
-    conn = sqlite3.connect('FastAPI.db')
-    conn.row_factory = sqlite3.Row
-    return conn
+    return get_db_connection()
 
 
 try:
@@ -205,7 +205,7 @@ async def login(user: UserLogin):
     conn = get_db_conn()
     cursor = conn.cursor()
     cursor.execute(
-        "SELECT id, username, password_hash FROM users WHERE username=?",
+        "SELECT id, username, password_hash FROM users WHERE username=%s",
         (user.username,)
     )
     user_data = cursor.fetchone()
@@ -255,7 +255,7 @@ async def register(user: UserRegister):
         conn.close()
         raise HTTPException(status_code=400, detail="Username already exists")
 
-    cursor.execute("SELECT * FROM users WHERE username=?", (user.username,))
+    cursor.execute("SELECT * FROM users WHERE username=%s", (user.username,))
     existing_user = cursor.fetchone()
 
     if existing_user:
@@ -265,12 +265,13 @@ async def register(user: UserRegister):
     hashed_password = hash_password(user.password)
 
     cursor.execute(
-        "INSERT INTO users (username, password_hash) VALUES (?, ?)",
+        "INSERT INTO users (username, password_hash) VALUES (%s, %s)",
         (user.username, hashed_password)
     )
     conn.commit()
 
-    user_id = cursor.lastrowid
+    cursor.execute("SELECT LASTVAL()")
+    user_id = cursor.fetchone()[0]
 
     conn.close()
 
@@ -312,7 +313,7 @@ async def read_notes(request: Request, current_user: dict = Depends(require_auth
                 SELECT notes.*, users.username
                 FROM notes
                 JOIN users ON notes.user_id = users.id
-                WHERE users.id = ?
+                WHERE users.id = %s
                 ORDER BY notes.id DESC
             ''', (user_id,))
             notes = [dict(row) for row in cursor.fetchall()]
@@ -327,7 +328,7 @@ async def read_notes(request: Request, current_user: dict = Depends(require_auth
             SELECT notes.*, users.username
             FROM notes
             JOIN users ON notes.user_id = users.id
-            WHERE users.id = ?
+            WHERE users.id = %s
             ORDER BY notes.id DESC
         ''', (user_id,))
         notes = [dict(row) for row in cursor.fetchall()]
@@ -357,7 +358,7 @@ async def create_item(
     cursor = conn.cursor()
     for item_text in text:
         cursor.execute(
-            'INSERT INTO notes (user_id, title, text) VALUES (?, ?, ?)',
+            'INSERT INTO notes (user_id, title, text) VALUES (%s, %s, %s)',
             (user_id, title, item_text)
         )
     conn.commit()
@@ -367,7 +368,7 @@ async def create_item(
         redis_client.delete(f"notes:{user_id}")
 
     cursor.execute(
-        'SELECT * FROM notes WHERE user_id = ? ORDER BY id DESC', (user_id,))
+        'SELECT * FROM notes WHERE user_id = %s ORDER BY id DESC', (user_id,))
     notes = cursor.fetchall()
     conn.close()
 
@@ -390,7 +391,7 @@ async def update_item(
 
     conn = get_db_conn()
     cursor = conn.cursor()
-    cursor.execute('SELECT * FROM notes WHERE id = ?', (item_id,))
+    cursor.execute('SELECT * FROM notes WHERE id = %s', (item_id,))
     existing_item = cursor.fetchone()
 
     if existing_item is None:
@@ -403,7 +404,7 @@ async def update_item(
             status_code=403, detail="Not authorized to update this note")
 
     cursor.execute(
-        'UPDATE notes SET title = ?, text = ? WHERE id = ?',
+        'UPDATE notes SET title = %s, text = %s WHERE id = %s',
         (title, text, item_id)
     )
     conn.commit()
@@ -426,7 +427,7 @@ def delete_item(
     conn = get_db_conn()
     cursor = conn.cursor()
 
-    cursor.execute('SELECT * FROM notes WHERE id = ?', (item_id,))
+    cursor.execute('SELECT * FROM notes WHERE id = %s', (item_id,))
     existing_item = cursor.fetchone()
 
     if existing_item is None:
@@ -438,7 +439,7 @@ def delete_item(
         raise HTTPException(
             status_code=403, detail="Not authorized to delete this note")
 
-    cursor.execute('DELETE FROM notes WHERE id = ?', (item_id,))
+    cursor.execute('DELETE FROM notes WHERE id = %s', (item_id,))
     conn.commit()
     conn.close()
 
@@ -461,7 +462,7 @@ async def search_notes(
     conn = get_db_conn()
     cursor = conn.cursor()
     cursor.execute(
-        "SELECT * FROM notes WHERE user_id = ? AND title LIKE ?",
+        "SELECT * FROM notes WHERE user_id = %s AND title LIKE %s",
         (user_id, '%' + query + '%')
     )
     notes = cursor.fetchall()
