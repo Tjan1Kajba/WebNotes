@@ -13,8 +13,6 @@ import json
 import os
 from datetime import datetime, timedelta
 
-
-# Initialize database on startup
 initialize_database()
 
 app = FastAPI(title="WebNotes", description="A simple note-taking web application")
@@ -26,8 +24,6 @@ SESSION_EXPIRY_HOURS = 24
 SESSION_KEY_PREFIX = "session:"
 USER_SESSIONS_PREFIX = "user_sessions:"
 
-
-# Redis setup (optional)
 redis_available = False
 try:
     redis_client = redis.Redis(
@@ -41,10 +37,10 @@ try:
     )
     redis_client.ping()
     redis_available = True
-    print("✅ Redis connected successfully")
+    print("Redis connected successfully")
 except redis.exceptions.ConnectionError:
     redis_client = None
-    print("⚠️  Redis not available, running without caching")
+    print("Redis not available, running without caching")
 
 
 class UserLogin(BaseModel):
@@ -87,7 +83,6 @@ def create_session(user_id: int, username: str) -> str:
         redis_client.expire(f"{USER_SESSIONS_PREFIX}{user_id}",
                             timedelta(hours=SESSION_EXPIRY_HOURS))
     else:
-        # Store session in database
         conn = get_db_connection()
         cursor = conn.cursor()
         cursor.execute(
@@ -143,12 +138,10 @@ async def get_current_user(request: Request) -> Optional[dict]:
     if not session_id:
         return None
 
-    # Try Redis first
     session_data = get_session(session_id)
     if session_data:
         return session_data
 
-    # Fallback to database if Redis not available
     if not redis_available:
         conn = get_db_connection()
         cursor = conn.cursor()
@@ -212,7 +205,6 @@ async def login(user: UserLogin):
             detail="Username and password are required"
         )
 
-    # Check cache first (if Redis available)
     cache_key = f"user:{user.username}"
     if redis_available:
         cached_user = redis_client.get(cache_key)
@@ -234,7 +226,6 @@ async def login(user: UserLogin):
                 )
                 return response
 
-    # Check database
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute(
@@ -247,7 +238,6 @@ async def login(user: UserLogin):
     if user_data and verify_password(user.password, user_data[2]):
         user_id, username, password_hash = user_data
 
-        # Cache user data (if Redis available)
         if redis_available:
             cache_data = {
                 "id": user_id,
@@ -256,7 +246,6 @@ async def login(user: UserLogin):
             }
             redis_client.setex(cache_key, timedelta(hours=1), json.dumps(cache_data))
 
-        # Create session and redirect
         session_id = create_session(user_id, username)
         response = RedirectResponse(
             url="/notes/",
@@ -296,7 +285,6 @@ async def register(user: UserRegister):
     conn = get_db_connection()
     cursor = conn.cursor()
 
-    # Check if user already exists
     cursor.execute("SELECT id FROM users WHERE username = %s", (user.username,))
     existing_user = cursor.fetchone()
 
@@ -307,7 +295,6 @@ async def register(user: UserRegister):
             detail="Username already exists"
         )
 
-    # Create new user
     hashed_password = hash_password(user.password)
     cursor.execute(
         "INSERT INTO users (username, password_hash) VALUES (%s, %s) RETURNING id",
@@ -318,7 +305,6 @@ async def register(user: UserRegister):
     conn.commit()
     conn.close()
 
-    # Clear cache if Redis available
     if redis_available:
         redis_client.delete(f"user:{user.username}")
 
@@ -333,10 +319,8 @@ async def logout(request: Request):
     """Logout user"""
     session_id = request.cookies.get("session_id")
     if session_id:
-        # Delete from Redis if available
         delete_session(session_id)
 
-        # Also delete from database if Redis not available
         if not redis_available:
             conn = get_db_connection()
             cursor = conn.cursor()
@@ -362,7 +346,6 @@ async def read_notes(request: Request, current_user: dict = Depends(require_auth
     user_id = current_user["user_id"]
     username = current_user["username"]
 
-    # Check cache first (if Redis available)
     cache_key = f"notes:{user_id}"
     if redis_available:
         cached_notes = redis_client.get(cache_key)
@@ -393,7 +376,6 @@ def _get_notes_from_db(user_id: int) -> list:
     notes = cursor.fetchall()
     conn.close()
 
-    # Convert tuples to dicts
     return [
         {
             "id": note[0],
@@ -409,7 +391,6 @@ def _get_notes_from_db(user_id: int) -> list:
 @app.post("/notes/")
 async def create_note(note: NoteCreate = None, current_user: dict = Depends(require_auth)):
     """Create a new note"""
-    # Handle empty requests (from frontend button)
     if note is None:
         note = NoteCreate(title="Nov listek", text="")
 
@@ -428,7 +409,6 @@ async def create_note(note: NoteCreate = None, current_user: dict = Depends(requ
     conn.commit()
     conn.close()
 
-    # Clear cache if Redis available
     if redis_available:
         redis_client.delete(f"notes:{user_id}")
 
@@ -447,7 +427,6 @@ async def update_note(
     """Update an existing note"""
     user_id = current_user["user_id"]
 
-    # Verify ownership
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute(
@@ -470,7 +449,6 @@ async def update_note(
             detail="Access denied"
         )
 
-    # Update note
     update_fields = []
     update_values = []
 
@@ -494,7 +472,6 @@ async def update_note(
 
     conn.close()
 
-    # Clear cache if Redis available
     if redis_available:
         redis_client.delete(f"notes:{user_id}")
 
@@ -509,7 +486,6 @@ async def delete_note(note_id: int, current_user: dict = Depends(require_auth)):
     conn = get_db_connection()
     cursor = conn.cursor()
 
-    # Verify ownership and delete
     cursor.execute(
         "DELETE FROM notes WHERE id = %s AND user_id = %s",
         (note_id, user_id)
@@ -525,7 +501,6 @@ async def delete_note(note_id: int, current_user: dict = Depends(require_auth)):
     conn.commit()
     conn.close()
 
-    # Clear cache if Redis available
     if redis_available:
         redis_client.delete(f"notes:{user_id}")
 
