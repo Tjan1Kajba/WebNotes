@@ -8,7 +8,8 @@ def get_db_connection():
     """Get database connection from DATABASE_URL environment variable"""
     database_url = os.getenv('DATABASE_URL')
     if not database_url:
-        raise ValueError("DATABASE_URL environment variable is not set")
+        # Fallback for local development
+        database_url = os.getenv('LOCAL_DATABASE_URL', 'postgresql://localhost/webnotes')
 
     parsed = urlparse(database_url)
     return psycopg2.connect(
@@ -48,10 +49,38 @@ def initialize_database():
         )
     ''')
 
+    # Create index for better performance
+    cursor.execute('''
+        CREATE INDEX IF NOT EXISTS idx_notes_user_id ON notes(user_id)
+    ''')
+
+    cursor.execute('''
+        CREATE INDEX IF NOT EXISTS idx_users_username ON users(username)
+    ''')
+
     conn.commit()
     cursor.close()
     conn.close()
 
 
+def test_connection():
+    """Test database connection"""
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute('SELECT 1')
+        cursor.close()
+        conn.close()
+        return True
+    except Exception as e:
+        print(f"Database connection failed: {e}")
+        return False
+
+
 if __name__ == "__main__":
-    initialize_database()
+    if test_connection():
+        print("Database connection successful")
+        initialize_database()
+        print("Database initialized successfully")
+    else:
+        print("Failed to connect to database")
