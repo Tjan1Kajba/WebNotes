@@ -12,6 +12,7 @@ import sqlite3
 import redis
 import uuid
 import json
+import os
 from datetime import datetime, timedelta
 
 
@@ -32,12 +33,22 @@ def get_db_conn():
     return conn
 
 
-redis_client = redis.Redis(
-    host='localhost',
-    port=6379,
-    db=0,
-    decode_responses=True
-)
+try:
+    redis_client = redis.Redis(
+        host=os.getenv('REDIS_HOST', 'localhost'),
+        port=int(os.getenv('REDIS_PORT', 6379)),
+        password=os.getenv('REDIS_PASSWORD'),
+        db=0,
+        decode_responses=True
+    )
+    # Test connection
+    redis_client.ping()
+    redis_available = True
+    print("Redis connected successfully")
+except redis.exceptions.ConnectionError:
+    print("Redis not available, running without caching")
+    redis_available = False
+    redis_client = None
 
 
 class UserLogin(BaseModel):
@@ -51,38 +62,39 @@ class UserRegister(BaseModel):
 
 
 def create_session(user_id: int, username: str) -> str:
-    """Create a new session in Redis"""
+    """Create a new session in Redis or return a simple session ID if Redis unavailable"""
     session_id = str(uuid.uuid4())
-    session_data = {
-        "user_id": user_id,
-        "username": username,
-        "created_at": datetime.now().isoformat(),
-        "last_activity": datetime.now().isoformat()
-    }
 
-    redis_client.setex(
-        f"{SESSION_KEY_PREFIX}{session_id}",
-        timedelta(hours=SESSION_EXPIRY_HOURS),
-        json.dumps(session_data)
-    )
+    if redis_available:
+        session_data = {
+            "user_id": user_id,
+            "username": username,
+            "created_at": datetime.now().isoformat(),
+            "last_activity": datetime.now().isoformat()
+        }
 
-    redis_client.sadd(f"{USER_SESSIONS_PREFIX}{user_id}", session_id)
-    redis_client.expire(f"{USER_SESSIONS_PREFIX}{user_id}",
-                        timedelta(hours=SESSION_EXPIRY_HOURS))
+        redis_client.setex(
+            f"{SESSION_KEY_PREFIX}{session_id}",
+            timedelta(hours=SESSION_EXPIRY_HOURS),
+            json.dumps(session_data)
+        )
+
+        redis_client.sadd(f"{USER_SESSIONS_PREFIX}{user_id}", session_id)
+        redis_client.expire(f"{USER_SESSIONS_PREFIX}{user_id}",
+                            timedelta(hours=SESSION_EXPIRY_HOURS))
 
     return session_id
 
 
 def get_session(session_id: str) -> Optional[dict]:
-    """Retrieve session data from Redis"""
-    if not session_id:
+    """Retrieve session data from Redis or return None if Redis unavailable"""
+    if not session_id or not redis_available:
         return None
 
     session_key = f"{SESSION_KEY_PREFIX}{session_id}"
     session_data = redis_client.get(session_key)
 
     if session_data:
-
         data = json.loads(session_data)
         data["last_activity"] = datetime.now().isoformat()
         redis_client.setex(
@@ -95,7 +107,10 @@ def get_session(session_id: str) -> Optional[dict]:
 
 
 def delete_session(session_id: str):
-    """Delete a session from Redis"""
+    """Delete a session from Redis if available"""
+    if not redis_available:
+        return
+
     session_key = f"{SESSION_KEY_PREFIX}{session_id}"
     session_data = redis_client.get(session_key)
 
@@ -108,7 +123,10 @@ def delete_session(session_id: str):
 
 
 def delete_all_user_sessions(user_id: int):
-    """Delete all sessions for a user"""
+    """Delete all sessions for a user if Redis available"""
+    if not redis_available:
+        return
+
     sessions_key = f"{USER_SESSIONS_PREFIX}{user_id}"
     session_ids = redis_client.smembers(sessions_key)
 
@@ -163,24 +181,26 @@ async def get_login_page(request: Request):
 @app.post("/login/")
 async def login(user: UserLogin):
     cache_key = f"user:{user.username}"
-    cached_user = redis_client.get(cache_key)
 
-    if cached_user:
-        user_data = json.loads(cached_user)
-        if verify_password(user.password, user_data["password_hash"]):
-            session_id = create_session(user_data["id"], user.username)
+    # Check cache only if Redis is available
+    if redis_available:
+        cached_user = redis_client.get(cache_key)
+        if cached_user:
+            user_data = json.loads(cached_user)
+            if verify_password(user.password, user_data["password_hash"]):
+                session_id = create_session(user_data["id"], user.username)
 
-            response = RedirectResponse(
-                url="/notes/", status_code=status.HTTP_303_SEE_OTHER)
-            response.set_cookie(
-                key="session_id",
-                value=session_id,
-                httponly=True,
-                max_age=SESSION_EXPIRY_HOURS * 3600,
-                secure=False,
-                samesite="lax"
-            )
-            return response
+                response = RedirectResponse(
+                    url="/notes/", status_code=status.HTTP_303_SEE_OTHER)
+                response.set_cookie(
+                    key="session_id",
+                    value=session_id,
+                    httponly=True,
+                    max_age=SESSION_EXPIRY_HOURS * 3600,
+                    secure=False,
+                    samesite="lax"
+                )
+                return response
 
     conn = get_db_conn()
     cursor = conn.cursor()
@@ -195,16 +215,18 @@ async def login(user: UserLogin):
         user_id, username, password_hash = user_data
 
         if verify_password(user.password, password_hash):
-            user_cache_data = {
-                "id": user_id,
-                "username": username,
-                "password_hash": password_hash
-            }
-            redis_client.setex(
-                cache_key,
-                timedelta(hours=1),
-                json.dumps(user_cache_data)
-            )
+            # Cache user data only if Redis is available
+            if redis_available:
+                user_cache_data = {
+                    "id": user_id,
+                    "username": username,
+                    "password_hash": password_hash
+                }
+                redis_client.setex(
+                    cache_key,
+                    timedelta(hours=1),
+                    json.dumps(user_cache_data)
+                )
 
             session_id = create_session(user_id, username)
 
@@ -229,7 +251,7 @@ async def register(user: UserRegister):
     cursor = conn.cursor()
 
     cache_key = f"user:{user.username}"
-    if redis_client.exists(cache_key):
+    if redis_available and redis_client.exists(cache_key):
         conn.close()
         raise HTTPException(status_code=400, detail="Username already exists")
 
@@ -252,7 +274,8 @@ async def register(user: UserRegister):
 
     conn.close()
 
-    redis_client.delete("all_users")
+    if redis_available:
+        redis_client.delete("all_users")
 
     return {"message": "User registered successfully", "user_id": user_id}
 
@@ -276,24 +299,39 @@ async def read_notes(request: Request, current_user: dict = Depends(require_auth
     user_id = current_user["user_id"]
 
     cache_key = f"notes:{user_id}"
-    cached_notes = redis_client.get(cache_key)
 
-    if cached_notes:
-        notes = json.loads(cached_notes)
+    # Check cache only if Redis is available
+    if redis_available:
+        cached_notes = redis_client.get(cache_key)
+        if cached_notes:
+            notes = json.loads(cached_notes)
+        else:
+            conn = get_db_conn()
+            cursor = conn.cursor()
+            cursor.execute('''
+                SELECT notes.*, users.username
+                FROM notes
+                JOIN users ON notes.user_id = users.id
+                WHERE users.id = ?
+                ORDER BY notes.id DESC
+            ''', (user_id,))
+            notes = [dict(row) for row in cursor.fetchall()]
+            conn.close()
+
+            redis_client.setex(cache_key, timedelta(minutes=5), json.dumps(notes))
     else:
+        # Always fetch from database if Redis unavailable
         conn = get_db_conn()
         cursor = conn.cursor()
         cursor.execute('''
-            SELECT notes.*, users.username 
-            FROM notes 
-            JOIN users ON notes.user_id = users.id 
-            WHERE users.id = ? 
+            SELECT notes.*, users.username
+            FROM notes
+            JOIN users ON notes.user_id = users.id
+            WHERE users.id = ?
             ORDER BY notes.id DESC
         ''', (user_id,))
         notes = [dict(row) for row in cursor.fetchall()]
         conn.close()
-
-        redis_client.setex(cache_key, timedelta(minutes=5), json.dumps(notes))
 
     return templates.TemplateResponse(
         "index.html",
@@ -324,7 +362,9 @@ async def create_item(
         )
     conn.commit()
 
-    redis_client.delete(f"notes:{user_id}")
+    # Clear cache only if Redis available
+    if redis_available:
+        redis_client.delete(f"notes:{user_id}")
 
     cursor.execute(
         'SELECT * FROM notes WHERE user_id = ? ORDER BY id DESC', (user_id,))
@@ -369,7 +409,9 @@ async def update_item(
     conn.commit()
     conn.close()
 
-    redis_client.delete(f"notes:{user_id}")
+    # Clear cache only if Redis available
+    if redis_available:
+        redis_client.delete(f"notes:{user_id}")
 
     return {"message": "Note updated successfully"}
 
@@ -400,7 +442,9 @@ def delete_item(
     conn.commit()
     conn.close()
 
-    redis_client.delete(f"notes:{user_id}")
+    # Clear cache only if Redis available
+    if redis_available:
+        redis_client.delete(f"notes:{user_id}")
 
     return {"message": "Item deleted successfully"}
 
@@ -431,8 +475,10 @@ async def search_notes(
 
 @app.get("/profile")
 async def get_profile(current_user: dict = Depends(require_auth)):
-    sessions_key = f"{USER_SESSIONS_PREFIX}{current_user['user_id']}"
-    active_sessions = redis_client.scard(sessions_key)
+    active_sessions = 0
+    if redis_available:
+        sessions_key = f"{USER_SESSIONS_PREFIX}{current_user['user_id']}"
+        active_sessions = redis_client.scard(sessions_key)
 
     return {
         "username": current_user["username"],
