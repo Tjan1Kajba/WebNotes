@@ -11,6 +11,7 @@ env:
   IMAGE_NAME: tjank70/webnotes
 
 jobs:
+  # Faza za gradnjo aplikacije (frontend in backend)
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -23,21 +24,24 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: "3.11"
-          cache: 'pip'
 
+      # Implementacija cachinga za odvisnosti (Python virtual environment .venv)
       - name: Cache dependencies
         uses: actions/cache@v3
         with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          path: .venv
+          key: ${{ runner.os }}-venv-${{ hashFiles('**/requirements.txt') }}
           restore-keys: |
-            ${{ runner.os }}-pip-
+            ${{ runner.os }}-venv-
 
       - name: Install dependencies
         run: |
+          python -m venv .venv
+          source .venv/bin/activate
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
+      # Shranjevanje gradbenih rezultatov kot artefaktov (backend datoteke)
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -50,6 +54,7 @@ jobs:
             Slike/
           retention-days: 7
 
+  # Faza za gradnjo Docker slike
   docker-build:
     runs-on: ubuntu-latest
     needs: build
@@ -63,6 +68,7 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
+      # Faza za nalaganje Docker slike (prijava v Docker Hub in push)
       - name: Log in to Docker Hub
         uses: docker/login-action@v3
         with:
@@ -89,6 +95,7 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+  # Faza za namestitev aplikacije z Render
   deploy:
     runs-on: ubuntu-latest
     needs: docker-build
