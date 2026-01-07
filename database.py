@@ -8,7 +8,6 @@ def get_db_connection():
     """Get database connection from DATABASE_URL environment variable"""
     database_url = os.getenv('DATABASE_URL')
     if not database_url:
-        # Fallback for local development
         database_url = os.getenv('LOCAL_DATABASE_URL', 'postgresql://localhost/webnotes')
 
     parsed = urlparse(database_url)
@@ -26,7 +25,6 @@ def initialize_database():
     conn = get_db_connection()
     cursor = conn.cursor()
 
-    # Create users table
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS users (
             id SERIAL PRIMARY KEY,
@@ -37,7 +35,6 @@ def initialize_database():
         )
     ''')
 
-    # Create notes table
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS notes (
             id SERIAL PRIMARY KEY,
@@ -49,7 +46,6 @@ def initialize_database():
         )
     ''')
 
-    # Create sessions table for when Redis is not available
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS sessions (
             session_id TEXT PRIMARY KEY,
@@ -60,7 +56,6 @@ def initialize_database():
         )
     ''')
 
-    # Create index for better performance
     cursor.execute('''
         CREATE INDEX IF NOT EXISTS idx_notes_user_id ON notes(user_id)
     ''')
