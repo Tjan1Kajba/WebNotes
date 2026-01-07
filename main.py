@@ -179,7 +179,10 @@ async def get_login_page(request: Request):
 
 
 @app.post("/login/")
-async def login(username: str = Form(...), password: str = Form(...)):
+async def login(username: str = Form(""), password: str = Form("")):
+    if not username or not password:
+        raise HTTPException(status_code=422, detail="Username and password are required")
+
     cache_key = f"user:{username}"
 
     # Check cache only if Redis is available
@@ -246,7 +249,10 @@ async def login(username: str = Form(...), password: str = Form(...)):
 
 
 @app.post("/register/")
-async def register(username: str = Form(...), password: str = Form(...)):
+async def register(username: str = Form(""), password: str = Form("")):
+    if not username or not password:
+        raise HTTPException(status_code=422, detail="Username and password are required")
+
     conn = get_db_conn()
     cursor = conn.cursor()
 
