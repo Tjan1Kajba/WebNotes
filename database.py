@@ -49,6 +49,17 @@ def initialize_database():
         )
     ''')
 
+    # Create sessions table for when Redis is not available
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS sessions (
+            session_id TEXT PRIMARY KEY,
+            user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            username TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            last_activity TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+
     # Create index for better performance
     cursor.execute('''
         CREATE INDEX IF NOT EXISTS idx_notes_user_id ON notes(user_id)
@@ -56,6 +67,14 @@ def initialize_database():
 
     cursor.execute('''
         CREATE INDEX IF NOT EXISTS idx_users_username ON users(username)
+    ''')
+
+    cursor.execute('''
+        CREATE INDEX IF NOT EXISTS idx_sessions_session_id ON sessions(session_id)
+    ''')
+
+    cursor.execute('''
+        CREATE INDEX IF NOT EXISTS idx_sessions_user_id ON sessions(user_id)
     ''')
 
     conn.commit()

@@ -68,7 +68,7 @@ class NoteUpdate(BaseModel):
 
 
 def create_session(user_id: int, username: str) -> str:
-    """Create a new session (with Redis if available)"""
+    """Create a new session (Redis preferred, database fallback)"""
     session_id = str(uuid.uuid4())
 
     if redis_available:
@@ -86,6 +86,17 @@ def create_session(user_id: int, username: str) -> str:
         redis_client.sadd(f"{USER_SESSIONS_PREFIX}{user_id}", session_id)
         redis_client.expire(f"{USER_SESSIONS_PREFIX}{user_id}",
                             timedelta(hours=SESSION_EXPIRY_HOURS))
+    else:
+        # Store session in database
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute(
+            "INSERT INTO sessions (session_id, user_id, username) VALUES (%s, %s, %s)",
+            (session_id, user_id, username)
+        )
+        conn.commit()
+        cursor.close()
+        conn.close()
 
     return session_id
 
@@ -132,7 +143,29 @@ async def get_current_user(request: Request) -> Optional[dict]:
     if not session_id:
         return None
 
-    return get_session(session_id)
+    # Try Redis first
+    session_data = get_session(session_id)
+    if session_data:
+        return session_data
+
+    # Fallback to database if Redis not available
+    if not redis_available:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT user_id, username FROM sessions WHERE session_id = %s",
+            (session_id,)
+        )
+        session_data = cursor.fetchone()
+        conn.close()
+
+        if session_data:
+            return {
+                "user_id": session_data[0],
+                "username": session_data[1]
+            }
+
+    return None
 
 
 async def require_auth(current_user: dict = Depends(get_current_user)):
@@ -300,7 +333,20 @@ async def logout(request: Request):
     """Logout user"""
     session_id = request.cookies.get("session_id")
     if session_id:
+        # Delete from Redis if available
         delete_session(session_id)
+
+        # Also delete from database if Redis not available
+        if not redis_available:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            cursor.execute(
+                "DELETE FROM sessions WHERE session_id = %s",
+                (session_id,)
+            )
+            conn.commit()
+            cursor.close()
+            conn.close()
 
     response = RedirectResponse(
         url="/login/",
