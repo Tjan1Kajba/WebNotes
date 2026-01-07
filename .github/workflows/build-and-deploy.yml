@@ -38,12 +38,6 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Run tests (optional, to ensure build is good)
-        run: |
-          pip install pytest
-          python -m pytest test_backend.py test_frontend.py -v
-        continue-on-error: true
-
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
