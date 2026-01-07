@@ -58,8 +58,8 @@ class UserRegister(BaseModel):
 
 
 class NoteCreate(BaseModel):
-    title: str
-    text: str
+    title: Optional[str] = "Nov listek"
+    text: Optional[str] = ""
 
 
 class NoteUpdate(BaseModel):
@@ -407,13 +407,14 @@ def _get_notes_from_db(user_id: int) -> list:
 
 
 @app.post("/notes/")
-async def create_note(note: NoteCreate, current_user: dict = Depends(require_auth)):
+async def create_note(note: NoteCreate = None, current_user: dict = Depends(require_auth)):
     """Create a new note"""
+    # Handle empty requests (from frontend button)
+    if note is None:
+        note = NoteCreate(title="Nov listek", text="")
+
     if not note.title.strip():
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail="Note title cannot be empty"
-        )
+        note.title = "Nov listek"
 
     user_id = current_user["user_id"]
 
