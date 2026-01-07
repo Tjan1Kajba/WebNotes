@@ -179,16 +179,16 @@ async def get_login_page(request: Request):
 
 
 @app.post("/login/")
-async def login(user: UserLogin):
-    cache_key = f"user:{user.username}"
+async def login(username: str = Form(...), password: str = Form(...)):
+    cache_key = f"user:{username}"
 
     # Check cache only if Redis is available
     if redis_available:
         cached_user = redis_client.get(cache_key)
         if cached_user:
             user_data = json.loads(cached_user)
-            if verify_password(user.password, user_data["password_hash"]):
-                session_id = create_session(user_data["id"], user.username)
+            if verify_password(password, user_data["password_hash"]):
+                session_id = create_session(user_data["id"], username)
 
                 response = RedirectResponse(
                     url="/notes/", status_code=status.HTTP_303_SEE_OTHER)
@@ -206,20 +206,20 @@ async def login(user: UserLogin):
     cursor = conn.cursor()
     cursor.execute(
         "SELECT id, username, password_hash FROM users WHERE username=%s",
-        (user.username,)
+        (username,)
     )
     user_data = cursor.fetchone()
     conn.close()
 
     if user_data:
-        user_id, username, password_hash = user_data
+        user_id, db_username, password_hash = user_data
 
-        if verify_password(user.password, password_hash):
+        if verify_password(password, password_hash):
             # Cache user data only if Redis is available
             if redis_available:
                 user_cache_data = {
                     "id": user_id,
-                    "username": username,
+                    "username": db_username,
                     "password_hash": password_hash
                 }
                 redis_client.setex(
@@ -228,7 +228,7 @@ async def login(user: UserLogin):
                     json.dumps(user_cache_data)
                 )
 
-            session_id = create_session(user_id, username)
+            session_id = create_session(user_id, db_username)
 
             response = RedirectResponse(
                 url="/notes/", status_code=status.HTTP_303_SEE_OTHER)
@@ -246,27 +246,27 @@ async def login(user: UserLogin):
 
 
 @app.post("/register/")
-async def register(user: UserRegister):
+async def register(username: str = Form(...), password: str = Form(...)):
     conn = get_db_conn()
     cursor = conn.cursor()
 
-    cache_key = f"user:{user.username}"
+    cache_key = f"user:{username}"
     if redis_available and redis_client.exists(cache_key):
         conn.close()
         raise HTTPException(status_code=400, detail="Username already exists")
 
-    cursor.execute("SELECT * FROM users WHERE username=%s", (user.username,))
+    cursor.execute("SELECT * FROM users WHERE username=%s", (username,))
     existing_user = cursor.fetchone()
 
     if existing_user:
         conn.close()
         raise HTTPException(status_code=400, detail="Username already exists")
 
-    hashed_password = hash_password(user.password)
+    hashed_password = hash_password(password)
 
     cursor.execute(
         "INSERT INTO users (username, password_hash) VALUES (%s, %s)",
-        (user.username, hashed_password)
+        (username, hashed_password)
     )
     conn.commit()
 
@@ -278,7 +278,8 @@ async def register(user: UserRegister):
     if redis_available:
         redis_client.delete("all_users")
 
-    return {"message": "User registered successfully", "user_id": user_id}
+    return RedirectResponse(
+        url="/login/", status_code=status.HTTP_303_SEE_OTHER)
 
 
 @app.get("/logout/")
