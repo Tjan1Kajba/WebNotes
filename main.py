@@ -179,19 +179,19 @@ async def get_login_page(request: Request):
 
 
 @app.post("/login/")
-async def login(username: str = Form(""), password: str = Form("")):
-    if not username or not password:
+async def login(user: UserLogin):
+    if not user.username or not user.password:
         raise HTTPException(status_code=422, detail="Username and password are required")
 
-    cache_key = f"user:{username}"
+    cache_key = f"user:{user.username}"
 
     # Check cache only if Redis is available
     if redis_available:
         cached_user = redis_client.get(cache_key)
         if cached_user:
             user_data = json.loads(cached_user)
-            if verify_password(password, user_data["password_hash"]):
-                session_id = create_session(user_data["id"], username)
+            if verify_password(user.password, user_data["password_hash"]):
+                session_id = create_session(user_data["id"], user.username)
 
                 response = RedirectResponse(
                     url="/notes/", status_code=status.HTTP_303_SEE_OTHER)
@@ -209,7 +209,7 @@ async def login(username: str = Form(""), password: str = Form("")):
     cursor = conn.cursor()
     cursor.execute(
         "SELECT id, username, password_hash FROM users WHERE username=%s",
-        (username,)
+        (user.username,)
     )
     user_data = cursor.fetchone()
     conn.close()
@@ -217,7 +217,7 @@ async def login(username: str = Form(""), password: str = Form("")):
     if user_data:
         user_id, db_username, password_hash = user_data
 
-        if verify_password(password, password_hash):
+        if verify_password(user.password, password_hash):
             # Cache user data only if Redis is available
             if redis_available:
                 user_cache_data = {
