@@ -16,11 +16,33 @@
     <style>
       body {
         padding-top: 50px !important;
-        padding: 15px;
+        padding: 15px 15px 90px;
       }
 
       .container {
         max-width: 800px;
+      }
+
+      .site-footer {
+        background-color: black;
+        padding: 12px 18px 10px;
+        box-sizing: border-box;
+        min-height: 52px;
+        z-index: 50;
+        color: white;
+        font-size: 16px;
+        line-height: 1.4;
+      }
+
+      .site-footer-inner {
+        position: relative;
+        width: 100%;
+        line-height: 1.4;
+      }
+
+      .site-footer a {
+        color: white;
+        font-size: 16px;
       }
 
       .listek {
@@ -81,86 +103,29 @@
   </head>
 
   <body>
-    <nav
-      class="navbar navbar-dark bg-dark fixed-top"
-      style="
-        background-color: black !important;
-        background-position: 50% 50%;
-        background-repeat: no-repeat;
-        background-size: 300px;
-        background-image: url('https://cdn.mysagestore.com/a977f7602289f64e72377167a4d54382/contents/SAN30101PP/SAN30101PP.png');
-      "
-    >
-      <div class="d-flex justify-content-between align-items-center w-100">
-        <a class="navbar-brand" href="/notes/" style="font-weight: bold"
-          >BELEŽKA</a
-        >
-        <div class="mr-auto">
-          <form id="addNoteForm" method="post">
-            <button
-              type="button"
-              class="btn btn-primary"
-              style="
-                background: black;
-                border: 2px solid white;
-                color: white;
-                font-weight: bold;
-              "
-              onclick="addNote()"
-            >
-              NOV LISTEK 📃
-            </button>
-          </form>
-        </div>
-        <script>
-          function addNote() {
-            fetch("/notes/", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/x-www-form-urlencoded",
-              },
-            })
-              .then((response) => {
-                if (response.ok) {
-                  location.reload();
-                } else {
-                  console.error("Error adding note");
-                }
-              })
-              .catch((error) => {
-                console.error("Error adding note:", error);
-              });
-          }
-        </script>
+    {% include "header.html" with context %}
 
-        <form action="/search/" method="get" class="form-inline">
-          <input
-            class="form-control"
-            type="search"
-            placeholder="Išči po naslovu"
-            aria-label="Search"
-            name="query"
-            style="
-              background-color: transparent;
-              border: 2px solid white;
-              color: white;
-            "
-          />
-          <button
-            class="btn btn-outline-success"
-            type="submit"
-            style="
-              background: white;
-              color: black;
-              font-weight: bold;
-              margin-left: -20px;
-            "
-          >
-            IŠČI
-          </button>
-        </form>
-      </div>
-    </nav>
+    <script>
+      function addNote() {
+        fetch("/notes/", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ title: "Nov listek", text: "" }),
+        })
+          .then((response) => {
+            if (response.ok) {
+              location.reload();
+            } else {
+              console.error("Error adding note");
+            }
+          })
+          .catch((error) => {
+            console.error("Error adding note:", error);
+          });
+      }
+    </script>
 
     <div class="row">
       {% for note in notes %}
@@ -173,11 +138,26 @@
         >
           <button
             type="button"
-            class="btn btn-danger"
+            class="btn btn-warning"
             contenteditable="false"
             style="
               position: absolute;
               top: 20px;
+              right: 20px;
+              z-index: 9 !important;
+              border: 2px solid black;
+            "
+            onclick="publishNote('{{ note.id }}')"
+          >
+            {% if note.is_public %}Javno{% else %}Objavi{% endif %}
+          </button>
+          <button
+            type="button"
+            class="btn btn-danger"
+            contenteditable="false"
+            style="
+              position: absolute;
+              top: 70px;
               right: 20px;
               z-index: 9 !important;
               border: 2px solid black;
@@ -196,6 +176,23 @@
           <form id="deleteForm_{{ note.id }}"></form>
 
           <script>
+            function publishNote(noteId) {
+              fetch(`/notes/${noteId}/publish`, {
+                method: "POST",
+              })
+                .then((response) => response.json())
+                .then((data) => {
+                  if (data && data.published) {
+                    location.reload();
+                  } else {
+                    console.error("Error publishing note");
+                  }
+                })
+                .catch((error) => {
+                  console.error("Error publishing note:", error);
+                });
+            }
+
             function deleteNote(noteId) {
               if (
                 confirm("Ali ste prepričani, da želite izbrisati to beležko?")
@@ -279,21 +276,14 @@
       }
     </script>
     <br /><br />
-    <footer
-      class="fixed-bottom"
-      style="background-color: black; padding: 15px; padding-bottom: 2px"
-    >
-      <p style="text-align: center; color: white">
-        Beležka - Kajba
-        <span style="right: 10px; position: absolute"
-          >Dobrodošli, <b>{{ username }} </b>
-          <a
-            style="text-decoration: underline; margin-left: 5px"
-            href="/logout/"
-            >Odjava</a
-          ></span
-        >
-      </p>
+    <footer class="fixed-bottom site-footer">
+      <div class="site-footer-inner">
+        <div style="text-align: center;">Beležka - Kajba</div>
+        <div style="position: absolute; right: 0; top: 0; white-space: nowrap;">
+          Dobrodošli, <b>{{ username or 'Gost' }}</b>
+          <a style="text-decoration: underline; margin-left: 5px;" href="/logout/">Odjava</a>
+        </div>
+      </div>
     </footer>
   </body>
 </html>

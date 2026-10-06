@@ -114,7 +114,7 @@
 </head>
 <body>
 
-<nav class="navbar navbar-dark bg-dark fixed-top" style="background-color: black !important;background-position: 50% 50%; background-repeat: no-repeat; background-size: 300px ;background-image: url('https://cdn.mysagestore.com/a977f7602289f64e72377167a4d54382/contents/SAN30101PP/SAN30101PP.png');height: 60px;"></nav>
+<nav class="navbar navbar-dark bg-dark fixed-top" style="background-color: black !important; background-position: 50% 50%; background-repeat: no-repeat; background-size: 300px; background-image: url('/Slike/SAN30101PP.png'); height: 60px;"></nav>
 
 </nav>
 <br><br>
@@ -162,12 +162,19 @@
                 data: JSON.stringify(formData),
                 contentType: 'application/json',
                 success: function (response) {
+                    if (response && response.redirect_url) {
+                        window.location.href = response.redirect_url;
+                        return;
+                    }
                     alert('Prijava je bila uspešna!');
                     window.location.href = "/notes/";
-
                 },
                 error: function (xhr, status, error) {
-                    alert('Nepravilno geslo ali ime');
+                    var message = 'Nepravilno geslo ali ime';
+                    if (xhr.responseJSON && xhr.responseJSON.detail) {
+                        message = xhr.responseJSON.detail;
+                    }
+                    alert(message);
                 }
             });
         });

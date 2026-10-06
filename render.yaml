@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: webnotes
+    env: docker
+    plan: starter
+    autoDeploy: true
+    healthCheckPath: /health
+    numInstances: 1
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: webnotes-db
+          property: connectionString
+
+databases:
+  - name: webnotes-db
+    databaseName: webnotes
+    user: webnotes

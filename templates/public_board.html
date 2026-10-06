@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Javna oglasna deska</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" />
+    <style>
+      html, body {
+        margin: 0;
+        min-height: 100%;
+        background: #ececec;
+        font-family: Arial, sans-serif;
+      }
+
+      body {
+        padding-top: 76px;
+        padding-bottom: 90px;
+      }
+
+      .board-shell {
+        position: relative;
+        background: #f4f1eb;
+        border: 8px solid #000000;
+        box-shadow: inset 0 0 0 2px #d9c7a9;
+        border-radius: 0;
+        width: 97%;
+        min-height: 200px;
+        margin: 0 auto 12px;
+        padding: 16px 14px 20px;
+        box-sizing: border-box;
+      }
+
+      .corner {
+        position: absolute;
+        width: 34px;
+        height: 34px;
+        border: 10px solid gray;
+        background: transparent;
+        z-index: 1;
+        box-sizing: border-box;
+      }
+
+      .corner.tl {
+        top: -6px;
+        left: -6px;
+        border-right: none;
+        border-bottom: none;
+      }
+
+      .corner.tr {
+        top: -6px;
+        right: -6px;
+        border-left: none;
+        border-bottom: none;
+      }
+
+      .corner.bl {
+        bottom: -6px;
+        left: -6px;
+        border-right: none;
+        border-top: none;
+      }
+
+      .corner.br {
+        bottom: -6px;
+        right: -6px;
+        border-left: none;
+        border-top: none;
+      }
+
+      .container {
+        max-width: 100%;
+      }
+
+      .board-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(220px, 1fr));
+        gap: 20px;
+        align-items: stretch;
+        width: 100%;
+      }
+
+      .board-item {
+        position: relative;
+        min-width: 0;
+      }
+
+      .listek {
+        width: 100% !important;
+        height: 270px !important;
+        position: relative;
+        overflow: hidden;
+        margin: 0 auto;
+        padding: 22px 22px 18px 22px;
+        border-radius: 0 0 0 30px/45px;
+        box-shadow: inset 0 -40px 40px rgba(0, 0, 0, 0.2), inset 0 25px 10px rgba(0, 0, 0, 0.2), 0 5px 6px 5px rgba(0, 0, 0, 0.2);
+        font-family: "Permanent Marker", cursive;
+        line-height: 1.7em;
+        font-size: 19px;
+        color: black;
+        text-decoration: underline;
+      }
+
+      .listek.green {
+        background-color: #8ecf9d;
+      }
+
+      .listek.pink {
+        background-color: #d6b3b3;
+      }
+
+      .listek:before {
+        content: "";
+        display: block;
+        position: absolute;
+        width: 20px;
+        height: 25px;
+        background: inherit;
+        box-shadow: 3px -2px 10px rgba(0, 0, 0, 0.2), inset 15px -15px 15px rgba(0, 0, 0, 0.3);
+        left: 0;
+        bottom: 0;
+        z-index: 2;
+        transform: skewX(25deg);
+      }
+
+      .listek:after {
+        content: "";
+        display: block;
+        position: absolute;
+        width: 75%;
+        height: 20px;
+        border-top: 3px solid black;
+        border-radius: 50%;
+        bottom: 0px;
+        left: 10%;
+      }
+
+      h1 {
+        font-size: 25px;
+        margin-bottom: 12px;
+        margin-top: 10px;
+      }
+
+      .author {
+        position: absolute;
+        top: 18px;
+        right: 18px;
+        font-size: 12px;
+        font-weight: bold;
+        color: #111;
+        background: rgba(255, 255, 255, 0.25);
+        padding: 4px 8px;
+        border-radius: 4px;
+      }
+
+      .heart-toggle {
+        position: absolute;
+        right: 18px;
+        bottom: 22px;
+        border: 2px solid #111;
+        background: rgba(255, 255, 255, 0.7);
+        color: #111;
+        border-radius: 999px;
+        padding: 6px 12px;
+        font-size: 14px;
+        font-weight: bold;
+        line-height: 1;
+        cursor: pointer;
+        z-index: 3;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .heart-toggle.is-active {
+        background: #e74c3c;
+        color: #fff;
+      }
+
+      .heart-toggle:disabled {
+        cursor: default;
+        opacity: 0.7;
+      }
+
+      .heart-count-value {
+        min-width: 20px;
+        text-align: center;
+      }
+
+      .board-empty {
+        background: rgba(255,255,255,0.2);
+        border: 1px solid #bdbdbd;
+        padding: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    {% include "header.html" with context %}
+
+    <div class="board-shell">
+      <span class="corner tl"></span>
+      <span class="corner tr"></span>
+      <span class="corner bl"></span>
+      <span class="corner br"></span>
+      <div class="container">
+        {% if notes %}
+        <div class="board-grid">
+          {% for note in notes %}
+          <div class="board-item">
+            <div
+              class="listek {% if loop.index % 2 == 0 %}pink{% else %}green{% endif %}"
+              data-note-id="{{ note.id }}"
+              data-heart-count="{{ note.heart_count }}"
+              data-hearted="{{ 1 if note.is_hearted else 0 }}"
+            >
+              <div class="author">{{ note.username }}</div>
+              <h1>{{ note.title }}</h1>
+              <ul>
+                {% for line in note.text.split('\n') %}
+                <li>{{ line }}</li>
+                {% endfor %}
+              </ul>
+              {% if username %}
+              <button
+                type="button"
+                class="heart-toggle {% if note.is_hearted %}is-active{% endif %}"
+                data-note-id="{{ note.id }}"
+              >
+                <span class="heart-icon">{% if note.is_hearted %}♥{% else %}♡{% endif %}</span>
+                <span class="heart-label">všeček</span>
+                <span class="heart-count-value">{{ note.heart_count }}</span>
+              </button>
+              {% endif %}
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div class="board-empty">Na javni oglasni deski še ni objavljenih beležk.</div>
+        {% endif %}
+      </div>
+    </div>
+
+    <footer
+      class="fixed-bottom"
+      style="background-color: black; padding: 12px 18px 10px; box-sizing: border-box; min-height: 52px; z-index: 50;"
+    >
+      <div style="position: relative; width: 100%; color: white; line-height: 1.4;">
+        <div style="text-align: center;">Beležka - Kajba</div>
+        <div style="position: absolute; right: 0; top: 0; white-space: nowrap;">
+          Dobrodošli, <b>{{ username or 'Gost' }}</b>
+          <a style="text-decoration: underline; margin-left: 5px; color: white;" href="/logout/">Odjava</a>
+        </div>
+      </div>
+    </footer>
+
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        document.querySelectorAll('.heart-toggle').forEach((button) => {
+          button.addEventListener('click', () => toggleHeart(button.dataset.noteId, button));
+        });
+      });
+
+      async function toggleHeart(noteId, button) {
+        try {
+          const response = await fetch(`/notes/${noteId}/heart`, {
+            method: 'POST',
+          });
+
+          if (!response.ok) {
+            console.error('Error toggling heart');
+            return;
+          }
+
+          const data = await response.json();
+          const card = button.closest('.listek');
+          const countValue = card.querySelector('.heart-count-value');
+          const heartIcon = button.querySelector('.heart-icon');
+
+          button.classList.toggle('is-active', data.hearted);
+          heartIcon.textContent = data.hearted ? '♥' : '♡';
+          countValue.textContent = data.heart_count;
+          card.dataset.hearted = data.hearted ? '1' : '0';
+          card.dataset.heartCount = String(data.heart_count);
+        } catch (error) {
+          console.error('Error toggling heart:', error);
+        }
+      }
+    </script>
+  </body>
+</html>

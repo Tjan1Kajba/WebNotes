@@ -1,0 +1,146 @@
+<style>
+  .navbar-brand.site-header-link {
+    display: inline-block;
+    padding-top: 0.3125rem;
+    padding-bottom: 0.3125rem;
+    margin-right: 1rem;
+    font-family: Arial, sans-serif;
+    font-size: 1.1rem;
+    font-weight: 700;
+    line-height: 1.2;
+    white-space: nowrap;
+    text-decoration: none;
+  }
+
+  .navbar-brand.site-header-board-link {
+    color: #fff;
+    text-shadow:
+      -1px -1px 0 #000,
+      1px -1px 0 #000,
+      -1px 1px 0 #000,
+      1px 1px 0 #000,
+      0 0 2px #000;
+  }
+
+  .site-header-logo {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    height: 340px;
+    width: auto;
+    z-index: 1;
+    pointer-events: none;
+  }
+
+  .site-header-content {
+    position: relative;
+    z-index: 2;
+  }
+  </style>
+<nav
+  class="navbar navbar-dark bg-dark fixed-top"
+  style="
+    background-color: black !important;
+  "
+>
+  <img
+    class="site-header-logo"
+    src="/Slike/SAN30101PP.png"
+    alt="SAN30101PP"
+  />
+  <div class="d-flex justify-content-between align-items-center w-100 site-header-content">
+    <div class="d-flex align-items-center">
+      <a class="navbar-brand site-header-link" href="/notes/">BELEŽKA</a>
+      <a class="navbar-brand site-header-link site-header-board-link" href="/board/" style="margin-left: 12px;"
+        >📌 Javna oglasna deska</a
+      >
+    </div>
+
+    <div class="d-flex align-items-center ml-auto">
+      {% if show_new_note_on_board %}
+      <button
+        type="button"
+        class="btn btn-primary mr-3"
+        style="
+          background: black;
+          border: 2px solid white;
+          color: white;
+          font-weight: bold;
+        "
+        onclick="createNewNoteAndGoToNotes()"
+      >
+        NOVI LISTIČEK 📃
+      </button>
+      <script>
+        function createNewNoteAndGoToNotes() {
+          fetch("/notes/", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ title: "Nov listek", text: "" }),
+          })
+            .then((response) => {
+              if (response.ok) {
+                window.location.href = "/notes/";
+              } else {
+                console.error("Error adding note");
+              }
+            })
+            .catch((error) => {
+              console.error("Error adding note:", error);
+            });
+        }
+      </script>
+      {% endif %}
+
+      {% if show_add_note %}
+      <form id="addNoteForm" method="post" class="mr-3">
+        <button
+          type="button"
+          class="btn btn-primary"
+          style="
+            background: black;
+            border: 2px solid white;
+            color: white;
+            font-weight: bold;
+          "
+          onclick="addNote()"
+        >
+          NOV LISTEK 📃
+        </button>
+      </form>
+      {% endif %}
+
+      {% if show_search %}
+      <form action="/search/" method="get" class="form-inline">
+        <input
+          class="form-control"
+          type="search"
+          placeholder="Išči po naslovu"
+          aria-label="Search"
+          name="query"
+          style="
+            background-color: transparent;
+            border: 2px solid white;
+            color: white;
+          "
+        />
+        <button
+          class="btn btn-outline-success"
+          type="submit"
+          style="
+            background: white;
+            color: black;
+            font-weight: bold;
+            margin-left: -20px;
+          "
+        >
+          IŠČI
+        </button>
+      </form>
+      {% endif %}
+    </div>
+  </div>
+</nav>
