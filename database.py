@@ -61,6 +61,7 @@ def initialize_database():
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 user_id INTEGER NOT NULL,
                 is_public BOOLEAN DEFAULT FALSE,
+                is_pinned BOOLEAN DEFAULT FALSE,
                 FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
             )
         '''
@@ -139,6 +140,8 @@ def initialize_database():
         if 'updated_at' not in columns:
             cursor.execute('ALTER TABLE notes ADD COLUMN updated_at TIMESTAMP')
             cursor.execute('UPDATE notes SET updated_at = created_at WHERE updated_at IS NULL')
+        if 'is_pinned' not in columns:
+            cursor.execute('ALTER TABLE notes ADD COLUMN is_pinned BOOLEAN DEFAULT FALSE')
     else:
         cursor.execute("""
             SELECT column_name
@@ -154,6 +157,10 @@ def initialize_database():
         cursor.execute("""
             ALTER TABLE notes
             ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        """)
+        cursor.execute("""
+            ALTER TABLE notes
+            ADD COLUMN IF NOT EXISTS is_pinned BOOLEAN DEFAULT FALSE
         """)
 
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_notes_user_id ON notes(user_id)')

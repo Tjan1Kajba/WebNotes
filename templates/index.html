@@ -99,6 +99,25 @@
         font-size: 25px;
         position: relative;
       }
+
+      .pin-button {
+        position: absolute;
+        top: 20px;
+        left: 20px;
+        z-index: 9 !important;
+        width: 38px;
+        height: 38px;
+        padding: 0;
+        border: 2px solid black;
+        background: #fff;
+        font-size: 20px;
+        line-height: 1;
+        cursor: pointer;
+      }
+
+      .pin-button.is-pinned {
+        background: #ffd54f;
+      }
     </style>
   </head>
 
@@ -136,6 +155,14 @@
           data-note-id="{{ note.id }}"
           style="position: relative"
         >
+          <button
+            type="button"
+            class="pin-button {% if note.is_pinned %}is-pinned{% endif %}"
+            contenteditable="false"
+            aria-label="{% if note.is_pinned %}Odpni beležko{% else %}Pripni beležko{% endif %}"
+            title="{% if note.is_pinned %}Odpni beležko{% else %}Pripni beležko{% endif %}"
+            onclick="togglePin('{{ note.id }}', this)"
+          >📌</button>
           <button
             type="button"
             class="btn btn-warning"
@@ -190,6 +217,21 @@
                 })
                 .catch((error) => {
                   console.error("Error publishing note:", error);
+                });
+            }
+
+            function togglePin(noteId, button) {
+              fetch(`/notes/${noteId}/pin`, { method: "POST" })
+                .then((response) => response.json())
+                .then((data) => {
+                  if (data && typeof data.pinned === "boolean") {
+                    location.reload();
+                  } else {
+                    console.error("Error changing pin state");
+                  }
+                })
+                .catch((error) => {
+                  console.error("Error changing pin state:", error);
                 });
             }
 

@@ -299,8 +299,9 @@ async def read_notes(request: Request, current_user: dict = Depends(require_auth
 def _get_notes_from_db(user_id: int):
     conn = get_db_connection()
     cursor = conn.cursor()
+    placeholder = "?" if conn.__class__.__module__.startswith("sqlite3") else "%s"
     cursor.execute(
-        "SELECT id, title, text, created_at, updated_at, is_public FROM notes WHERE user_id = %s ORDER BY created_at DESC",
+        f"SELECT id, title, text, created_at, updated_at, is_public, is_pinned FROM notes WHERE user_id = {placeholder} ORDER BY is_pinned DESC, created_at DESC",
         (user_id,),
     )
     rows = cursor.fetchall()
@@ -313,6 +314,7 @@ def _get_notes_from_db(user_id: int):
             "created_at": row[3],
             "updated_at": row[4],
             "is_public": bool(row[5]) if row[5] is not None else False,
+            "is_pinned": bool(row[6]) if row[6] is not None else False,
         }
         for row in rows
     ]
@@ -543,6 +545,34 @@ async def publish_note(note_id: int, current_user: dict = Depends(require_auth))
         redis_client.delete(f"notes:{current_user['user_id']}")
 
     return {"message": "Note published successfully", "published": True}
+
+
+@app.post("/notes/{note_id}/pin")
+async def toggle_pin(note_id: int, current_user: dict = Depends(require_auth)):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    placeholder = "?" if conn.__class__.__module__.startswith("sqlite3") else "%s"
+    cursor.execute(f"SELECT user_id, is_pinned FROM notes WHERE id = {placeholder}", (note_id,))
+    note_data = cursor.fetchone()
+    if not note_data:
+        conn.close()
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Note not found")
+    if note_data[0] != current_user["user_id"]:
+        conn.close()
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Access denied")
+
+    pinned = not bool(note_data[1])
+    cursor.execute(
+        f"UPDATE notes SET is_pinned = {placeholder}, updated_at = CURRENT_TIMESTAMP WHERE id = {placeholder}",
+        (pinned, note_id),
+    )
+    conn.commit()
+    conn.close()
+
+    if redis_available and redis_client is not None:
+        redis_client.delete(f"notes:{current_user['user_id']}")
+
+    return {"message": "Note pin state updated", "pinned": pinned}
 
 
 @app.put("/notes/{note_id}")
