@@ -101,18 +101,26 @@
       }
 
       .pin-button {
-        position: absolute;
-        top: 20px;
-        left: 20px;
-        z-index: 9 !important;
+        position: relative;
         width: 38px;
         height: 38px;
         padding: 0;
         border: 2px solid black;
+        border-radius: 0.25rem;
         background: #fff;
         font-size: 20px;
         line-height: 1;
         cursor: pointer;
+      }
+
+      .note-actions {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        z-index: 9 !important;
+        display: flex;
+        align-items: center;
+        gap: 8px;
       }
 
       .pin-button.is-pinned {
@@ -155,29 +163,25 @@
           data-note-id="{{ note.id }}"
           style="position: relative"
         >
-          <button
-            type="button"
-            class="pin-button {% if note.is_pinned %}is-pinned{% endif %}"
-            contenteditable="false"
-            aria-label="{% if note.is_pinned %}Odpni beležko{% else %}Pripni beležko{% endif %}"
-            title="{% if note.is_pinned %}Odpni beležko{% else %}Pripni beležko{% endif %}"
-            onclick="togglePin('{{ note.id }}', this)"
-          >📌</button>
-          <button
-            type="button"
-            class="btn btn-warning"
-            contenteditable="false"
-            style="
-              position: absolute;
-              top: 20px;
-              right: 20px;
-              z-index: 9 !important;
-              border: 2px solid black;
-            "
-            onclick="publishNote('{{ note.id }}')"
-          >
-            {% if note.is_public %}Javno{% else %}Objavi{% endif %}
-          </button>
+          <div class="note-actions">
+            <button
+              type="button"
+              class="btn btn-warning"
+              contenteditable="false"
+              style="border: 2px solid black;"
+              onclick="publishNote('{{ note.id }}')"
+            >
+              {% if note.is_public %}Javno{% else %}Objavi{% endif %}
+            </button>
+            <button
+              type="button"
+              class="pin-button {% if note.is_pinned %}is-pinned{% endif %}"
+              contenteditable="false"
+              aria-label="{% if note.is_pinned %}Odpni beležko{% else %}Pripni beležko{% endif %}"
+              title="{% if note.is_pinned %}Odpni beležko{% else %}Pripni beležko{% endif %}"
+              onclick="togglePin('{{ note.id }}', this)"
+            >📌</button>
+          </div>
           <button
             type="button"
             class="btn btn-danger"
