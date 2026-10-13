@@ -318,13 +318,19 @@ def _get_notes_from_db(user_id: int):
     ]
 
 
-def _get_public_notes_from_db(current_user_id: Optional[int] = None):
+def _get_public_notes_from_db(current_user_id: Optional[int] = None, sort_order: str = "date_desc"):
     conn = get_db_connection()
     cursor = conn.cursor()
+    order_by = {
+        "date_desc": "n.created_at DESC",
+        "date_asc": "n.created_at ASC",
+        "likes_desc": "heart_count DESC, n.created_at DESC",
+        "likes_asc": "heart_count ASC, n.created_at DESC",
+    }.get(sort_order, "n.created_at DESC")
     if conn.__class__.__module__.startswith("sqlite3"):
         if current_user_id is None:
             cursor.execute(
-                """
+                f"""
                 SELECT n.id, n.title, n.text, n.created_at, n.updated_at, n.is_public, u.username,
                        COALESCE(hc.heart_count, 0) AS heart_count,
                        0 AS is_hearted
@@ -336,12 +342,12 @@ def _get_public_notes_from_db(current_user_id: Optional[int] = None):
                     GROUP BY note_id
                 ) hc ON hc.note_id = n.id
                 WHERE n.is_public = 1
-                ORDER BY n.created_at DESC
+                ORDER BY {order_by}
                 """
             )
         else:
             cursor.execute(
-                """
+                f"""
                 SELECT n.id, n.title, n.text, n.created_at, n.updated_at, n.is_public, u.username,
                        COALESCE(hc.heart_count, 0) AS heart_count,
                        CASE WHEN uh.user_id IS NULL THEN 0 ELSE 1 END AS is_hearted
@@ -354,14 +360,14 @@ def _get_public_notes_from_db(current_user_id: Optional[int] = None):
                 ) hc ON hc.note_id = n.id
                 LEFT JOIN note_hearts uh ON uh.note_id = n.id AND uh.user_id = ?
                 WHERE n.is_public = 1
-                ORDER BY n.created_at DESC
+                ORDER BY {order_by}
                 """,
                 (current_user_id,),
             )
     else:
         if current_user_id is None:
             cursor.execute(
-                """
+                f"""
                 SELECT n.id, n.title, n.text, n.created_at, n.updated_at, n.is_public, u.username,
                        COALESCE(hc.heart_count, 0) AS heart_count,
                        0 AS is_hearted
@@ -373,12 +379,12 @@ def _get_public_notes_from_db(current_user_id: Optional[int] = None):
                     GROUP BY note_id
                 ) hc ON hc.note_id = n.id
                 WHERE n.is_public = TRUE
-                ORDER BY n.created_at DESC
+                ORDER BY {order_by}
                 """
             )
         else:
             cursor.execute(
-                """
+                f"""
                 SELECT n.id, n.title, n.text, n.created_at, n.updated_at, n.is_public, u.username,
                        COALESCE(hc.heart_count, 0) AS heart_count,
                        CASE WHEN uh.user_id IS NULL THEN 0 ELSE 1 END AS is_hearted
@@ -391,7 +397,7 @@ def _get_public_notes_from_db(current_user_id: Optional[int] = None):
                 ) hc ON hc.note_id = n.id
                 LEFT JOIN note_hearts uh ON uh.note_id = n.id AND uh.user_id = %s
                 WHERE n.is_public = TRUE
-                ORDER BY n.created_at DESC
+                ORDER BY {order_by}
                 """,
                 (current_user_id,),
             )
@@ -416,7 +422,10 @@ def _get_public_notes_from_db(current_user_id: Optional[int] = None):
 @app.get("/board/", response_class=HTMLResponse)
 async def public_board(request: Request):
     current_user = await get_current_user(request)
-    notes = _get_public_notes_from_db(current_user["user_id"] if current_user else None)
+    sort_order = request.query_params.get("sort", "date_desc")
+    if sort_order not in {"date_desc", "date_asc", "likes_desc", "likes_asc"}:
+        sort_order = "date_desc"
+    notes = _get_public_notes_from_db(current_user["user_id"] if current_user else None, sort_order)
     return templates.TemplateResponse(
         "public_board.html",
         {
@@ -424,6 +433,7 @@ async def public_board(request: Request):
             "notes": notes,
             "username": current_user["username"] if current_user else None,
             "show_new_note_on_board": True,
+            "sort_order": sort_order,
         },
     )
 
@@ -496,7 +506,7 @@ async def create_note(request: Request, current_user: dict = Depends(require_aut
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute(
-        "INSERT INTO notes (user_id, title, text, is_public) VALUES (%s, %s, %s, %s) RETURNING id",
+           "INSERT INTO notes (user_id, title, text, is_public, created_at, updated_at) VALUES (%s, %s, %s, %s, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP) RETURNING id",
         (current_user["user_id"], note.title, note.text or "", False),
     )
     note_id = cursor.fetchone()[0]

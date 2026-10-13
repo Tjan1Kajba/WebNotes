@@ -193,6 +193,22 @@
         border: 1px solid #bdbdbd;
         padding: 20px;
       }
+
+      .sort-bar {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin: 0 0 16px;
+        font-weight: bold;
+      }
+
+      .sort-bar select {
+        min-width: 220px;
+        padding: 6px 8px;
+        border: 2px solid #111;
+        background: white;
+        font-weight: normal;
+      }
     </style>
   </head>
   <body>
@@ -204,6 +220,15 @@
       <span class="corner bl"></span>
       <span class="corner br"></span>
       <div class="container">
+        <form class="sort-bar" method="get" action="/board/">
+          <label for="sort-order">Razvrsti po:</label>
+          <select id="sort-order" name="sort" onchange="this.form.submit()">
+            <option value="date_desc" {% if sort_order == 'date_desc' %}selected{% endif %}>Datumu, novejše najprej</option>
+            <option value="date_asc" {% if sort_order == 'date_asc' %}selected{% endif %}>Datumu, starejše najprej</option>
+            <option value="likes_desc" {% if sort_order == 'likes_desc' %}selected{% endif %}>Številu všečkov, največ najprej</option>
+            <option value="likes_asc" {% if sort_order == 'likes_asc' %}selected{% endif %}>Številu všečkov, najmanj najprej</option>
+          </select>
+        </form>
         {% if notes %}
         <div class="board-grid">
           {% for note in notes %}

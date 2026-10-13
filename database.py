@@ -133,6 +133,12 @@ def initialize_database():
         columns = [column[1] for column in cursor.fetchall()]
         if 'is_public' not in columns:
             cursor.execute('ALTER TABLE notes ADD COLUMN is_public BOOLEAN DEFAULT FALSE')
+        if 'created_at' not in columns:
+            cursor.execute('ALTER TABLE notes ADD COLUMN created_at TIMESTAMP')
+            cursor.execute('UPDATE notes SET created_at = CURRENT_TIMESTAMP WHERE created_at IS NULL')
+        if 'updated_at' not in columns:
+            cursor.execute('ALTER TABLE notes ADD COLUMN updated_at TIMESTAMP')
+            cursor.execute('UPDATE notes SET updated_at = created_at WHERE updated_at IS NULL')
     else:
         cursor.execute("""
             SELECT column_name
@@ -141,6 +147,14 @@ def initialize_database():
         """)
         if cursor.fetchone() is None:
             cursor.execute('ALTER TABLE notes ADD COLUMN is_public BOOLEAN DEFAULT FALSE')
+        cursor.execute("""
+            ALTER TABLE notes
+            ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        """)
+        cursor.execute("""
+            ALTER TABLE notes
+            ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        """)
 
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_notes_user_id ON notes(user_id)')
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_notes_public ON notes(is_public)')
