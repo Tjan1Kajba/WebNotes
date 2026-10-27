@@ -5,29 +5,137 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Registracija</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="icon" href="https://icons.iconarchive.com/icons/wwalczyszyn/android-style/256/Notes-icon.png" type="image/x-icon">
+
     <style>
-        body { padding-top: 90px; background: #f4f4f4; }
-        .register-card { max-width: 460px; margin: 0 auto; padding: 30px; background: #ffa; border-radius: 0 0 0 30px; box-shadow: 0 5px 6px 5px rgba(0, 0, 0, .2); }
-        input { margin-bottom: 18px; }
+        body {
+            padding-top: 50px !important;
+            padding: 15px;
+        }
+
+        .container {
+            max-width: 1000px;
+        }
+
+        h2 {
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: #333333;
+        }
+
+        label {
+            font-size: 16px;
+            font-weight: bold;
+            color: #555555;
+        }
+
+        input[type="text"],
+        input[type="password"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        input[type="submit"] {
+            width: 100%;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 4px;
+            background-color: #007bff;
+            color: #ffffff;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        input[type="submit"]:hover {
+            background-color: #0056b3;
+        }
+
+        .listek {
+            width: 100% !important;
+            height: 420px !important;
+            position: relative;
+            background: #ffa;
+            overflow: hidden;
+            margin: 30px auto;
+            padding: 20px;
+            border-radius: 0 0 0 30px/45px;
+            box-shadow:
+                inset 0 -40px 40px rgba(0, 0, 0, 0.2),
+                inset 0 25px 10px rgba(0, 0, 0, 0.2),
+                0 5px 6px 5px rgba(0, 0, 0, 0.2);
+            font-family: 'Permanent Marker', cursive;
+            line-height: 1.7em;
+            font-size: 19px;
+            color: black;
+            text-decoration: underline;
+        }
+
+        .listek:before {
+            content: "";
+            display: block;
+            position: absolute;
+            width: 20px;
+            height: 25px;
+            background: #ffa;
+            box-shadow:
+                3px -2px 10px rgba(0, 0, 0, 0.2),
+                inset 15px -15px 15px rgba(0, 0, 0, 0.3);
+            left: 0;
+            bottom: 0;
+            z-index: 2;
+            transform: skewX(25deg);
+        }
+
+        .listek:after {
+            content: "";
+            display: block;
+            position: absolute;
+            width: 75%;
+            height: 20px;
+            border-top: 3px solid black;
+            border-radius: 50%;
+            bottom: 0px;
+            left: 10%;
+        }
+
+        .form-container {
+            position: relative;
+            z-index: 1;
+        }
+
+        .form-container p {
+            text-decoration: none;
+            font-size: 16px;
+            line-height: 1.5;
+        }
     </style>
 </head>
 <body>
-    <nav class="navbar navbar-dark bg-dark fixed-top" style="background-color: black !important; height: 60px;">
-        <a class="navbar-brand" href="/login/">BELEŽKA</a>
-    </nav>
-    <main class="container">
-        <div class="register-card">
-            <h2>Registracija</h2>
-            <form id="registerForm">
-                <label for="username">Uporabniško ime:</label>
-                <input class="form-control" type="text" id="username" name="username" required>
-                <label for="password">Geslo:</label>
-                <input class="form-control" type="password" id="password" name="password" minlength="6" required>
-                <button class="btn btn-primary btn-block" type="submit">Registracija</button>
-            </form>
-            <p class="mt-3 mb-0">Že imaš račun? <a href="/login/">Prijava</a></p>
+    <nav class="navbar navbar-dark bg-dark fixed-top" style="background-color: black !important; background-position: 50% 50%; background-repeat: no-repeat; background-size: 300px; background-image: url('/Slike/SAN30101PP.png'); height: 60px;"></nav>
+
+    <br><br>
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-5 listek">
+                <div class="form-container">
+                    <h2>Registracija</h2>
+                    <form id="registerForm">
+                        <label for="username">Uporabniško ime:</label>
+                        <input type="text" id="username" name="username" required>
+                        <label for="password">Geslo:</label>
+                        <input type="password" id="password" name="password" minlength="6" required>
+                        <input type="submit" value="Registracija">
+                    </form>
+                    <p>Že imaš račun? <a href="/login/">Prijava</a></p>
+                </div>
+            </div>
         </div>
-    </main>
+    </div>
+
     <script>
         document.getElementById("registerForm").addEventListener("submit", async function (event) {
             event.preventDefault();
@@ -48,5 +156,10 @@
             window.location.href = "/login/";
         });
     </script>
+
+    <br><br>
+    <footer class="fixed-bottom" style="background-color: black; padding: 15px; padding-bottom: 2px;">
+        <p style="text-align: center; color: white;">Beležka - Kajba</p>
+    </footer>
 </body>
 </html>
