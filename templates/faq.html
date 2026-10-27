@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="sl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pomoč - FAQ</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="icon" href="https://icons.iconarchive.com/icons/wwalczyszyn/android-style/256/Notes-icon.png" type="image/x-icon">
+    <style>
+        html, body {
+            margin: 0;
+            min-height: 100%;
+            background: #ececec;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            padding-top: 76px;
+            padding-bottom: 90px;
+        }
+
+        .box {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: #f4f1eb;
+            border: 8px solid #000000;
+            box-shadow: inset 0 0 0 2px #d9c7a9;
+            padding: 28px 30px 42px;
+            box-sizing: border-box;
+        }
+
+        .box h1 {
+            margin: 0 0 12px;
+            padding-bottom: 12px;
+            border-bottom: 3px solid #111;
+            font-size: 30px;
+            font-weight: 700;
+        }
+
+        .box .faq-item {
+            margin: 14px 0;
+            font-size: 18px;
+            line-height: 1.6;
+        }
+
+        .box .faq-question {
+            font-weight: 700;
+            color: #111;
+        }
+
+        .box .faq-answer {
+            color: #333;
+            margin-left: 20px;
+        }
+    </style>
+</head>
+<body>
+    {% include "header.html" with context %}
+
+    <main class="box">
+        <h1>Pomoč in FAQ</h1>
+
+        <div class="faq-item">
+            <div class="faq-question">Kako nastanem račun?</div>
+            <div class="faq-answer">
+                Na vrhu strani kliknite <b>Registracija</b> in vpisite užito ime ter geslo.
+                Po uspešni registraciji se lahko prijavite s svojimi podatki.
+            </div>
+        </div>
+
+        <div class="faq-item">
+            <div class="faq-question">Kako ustvarim nov listič?</div>
+            <div class="faq-answer">
+                Ko ste prijavljeni, odprite <b>Moje beležke</b> in kliknite <b>NOV LISTEK</b>.
+                Vpišete naslov in besedilo, nato se shrani na trenutno stran.
+            </div>
+        </div>
+
+        <div class="faq-item">
+            <div class="faq-question">Kako delim listič z drugimi?</div>
+            <div class="faq-answer">
+                Ko urejate listič, iz vsakega seznama izberite <b>Naredi javno</b> (opcija na
+                strani z beležkami). Javni listič bodo na javni oglasni deski vidni vsem,
+                ki so na voljo v aplikaciji.
+            </div>
+        </div>
+
+        <div class="faq-item">
+            <div class="faq-question">Kaj pomeni srček na javni oglasni deski?</div>
+            <div class="faq-answer">
+                Srček je hitri način, da izrazite podporo ali zanimanje za objavo.
+                Število srčkov se prikaže pri vsaki javni oglasi.
+            </div>
+        </div>
+
+        <div class="faq-item">
+            <div class="faq-question">Kje najdem moje beležke?</div>
+            <div class="faq-answer">
+                Po prijavi kliknite <b>Moje beležke</b> v zgornjem meniju. Tam so vse
+                vaše osebne lističe razvrščene po zadnjem urejanju.
+            </div>
+        </div>
+
+        <div class="faq-item">
+            <div class="faq-question">Kje sem lahko pomaknem se na drugo stran?</div>
+            <div class="faq-answer">
+                V zgornjem menu aplikacije imate povezave do <b>Beležka</b>, <b>Javne oglasne
+                deske</b>, <b>MOJA BELLEŽKA</b> ter stranih <b>O nas</b> in <b>FAQ</b>.
+            </div>
+        </div>
+    </main>
+
+    <footer
+        class="fixed-bottom"
+        style="background-color: black; padding: 15px; padding-bottom: 2px;"
+    >
+        <div style="text-align: center; color: white; display: flex; justify-content: center; flex-wrap: wrap; gap: 12px;">
+            <p style="margin: 0 8px 0 0;"><a href="/o-nas" style="color: white; text-decoration: underline;">O nas</a></p>
+            <p style="margin: 0 8px 0 0;"><a href="/faq" style="color: white; text-decoration: underline;">FAQ</a></p>
+        </div>
+        <p style="text-align: center; color: white; margin-top: 5px;">Beležka - Kajba</p>
+    </footer>
+</body>
+</html>

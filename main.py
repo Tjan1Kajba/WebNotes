@@ -206,6 +206,18 @@ async def get_register_page(request: Request):
     return templates.TemplateResponse("register.html", {"request": request})
 
 
+@app.get("/o-nas", response_class=HTMLResponse)
+@app.get("/o-nas/", response_class=HTMLResponse)
+async def get_about_page(request: Request):
+    return templates.TemplateResponse("o-nas.html", {"request": request})
+
+
+@app.get("/faq", response_class=HTMLResponse)
+@app.get("/faq/", response_class=HTMLResponse)
+async def get_faq_page(request: Request):
+    return templates.TemplateResponse("faq.html", {"request": request})
+
+
 @app.post("/login")
 @app.post("/login/")
 async def login(request: Request):
