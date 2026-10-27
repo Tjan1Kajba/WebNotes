@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="sl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Beležka - Domov</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="icon" href="https://icons.iconarchive.com/icons/wwalczyszyn/android-style/256/Notes-icon.png" type="image/x-icon">
+    <style>
+        html, body {
+            margin: 0;
+            min-height: 100%;
+            background: #ececec;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            padding-top: 76px;
+            padding-bottom: 90px;
+        }
+
+        .board-shell {
+            position: relative;
+            background: #f4f1eb;
+            border: 8px solid #000000;
+            box-shadow: inset 0 0 0 2px #d9c7a9;
+            width: 97%;
+            margin: 0 auto 12px;
+            padding: 28px 30px 38px;
+            box-sizing: border-box;
+        }
+
+        .corner {
+            position: absolute;
+            width: 34px;
+            height: 34px;
+            border: 10px solid gray;
+            background: transparent;
+            z-index: 1;
+            box-sizing: border-box;
+        }
+
+        .corner.tl { top: -6px; left: -6px; border-right: none; border-bottom: none; }
+        .corner.tr { top: -6px; right: -6px; border-left: none; border-bottom: none; }
+        .corner.bl { bottom: -6px; left: -6px; border-right: none; border-top: none; }
+        .corner.br { bottom: -6px; right: -6px; border-left: none; border-top: none; }
+
+        .home-heading {
+            margin: 0 auto 24px;
+            max-width: 1000px;
+            padding-bottom: 12px;
+            border-bottom: 3px solid #111;
+            font-size: 30px;
+            font-weight: 700;
+        }
+
+        .home-intro {
+            max-width: 1000px;
+            margin: 0 auto 10px;
+            font-size: 18px;
+            line-height: 1.6;
+        }
+
+        .home-image {
+            display: block;
+            width: 100%;
+            max-width: 1000px;
+            height: 220px;
+            margin: 0 auto 20px;
+            object-fit: cover;
+            border: 3px solid #111;
+        }
+
+        .home-cards {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .listek {
+            position: relative;
+            min-height: 230px;
+            margin: 20px 0;
+            padding: 26px 24px 34px;
+            border-radius: 0 0 0 30px/45px;
+            box-shadow:
+                inset 0 -40px 40px rgba(0, 0, 0, 0.2),
+                inset 0 25px 10px rgba(0, 0, 0, 0.2),
+                0 5px 6px 5px rgba(0, 0, 0, 0.2);
+            box-sizing: border-box;
+            overflow: hidden;
+            color: black;
+        }
+
+        .listek.yellow { background: #ffa; }
+        .listek.green { background: #8ecf9d; }
+        .listek.pink { background: #f7b6c8; }
+
+        .listek:before {
+            content: "";
+            position: absolute;
+            width: 20px;
+            height: 25px;
+            left: 0;
+            bottom: 0;
+            background: inherit;
+            box-shadow: 3px -2px 10px rgba(0, 0, 0, 0.2), inset 15px -15px 15px rgba(0, 0, 0, 0.3);
+            transform: skewX(25deg);
+            z-index: 2;
+        }
+
+        .listek:after {
+            content: "";
+            position: absolute;
+            width: 75%;
+            height: 20px;
+            left: 10%;
+            bottom: 0;
+            border-top: 3px solid black;
+            border-radius: 50%;
+        }
+
+        .listek h3 {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+
+        .listek .icon {
+            font-size: 34px;
+            display: block;
+            margin-bottom: 6px;
+        }
+
+        .listek p {
+            margin: 0;
+            font-size: 16px;
+        }
+
+        .home-actions {
+            text-align: center;
+            margin-top: 28px;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-dark bg-dark fixed-top" style="background-color: black !important; background-position: 50% 50%; background-repeat: no-repeat; background-size: 300px; background-image: url('/Slike/SAN30101PP.png'); height: 60px;"></nav>
+
+    <main class="board-shell">
+        <span class="corner tl"></span>
+        <span class="corner tr"></span>
+        <span class="corner bl"></span>
+        <span class="corner br"></span>
+
+        <h1 class="home-heading">Dobrodošli v Beležki 📌</h1>
+
+        <p class="home-intro">
+            <b>Beležka</b> je preprosta spletna aplikacija za pisanje in shranjevanje lističev z zapiski.
+            Svoje misli, opravila in ideje zapišeš na digitalne lističe, jih urejaš, pripneš in poiščeš.
+            Če želiš, jih deliš z drugimi na javni oglasni deski, kjer lahko drugi uporabniki
+            lističe tudi označijo s srčkom.
+        </p>
+
+        <img class="home-image" src="/Slike/sticky-notes.jpg" alt="Pisani listki z zapiski">
+
+        <div class="home-cards">
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="listek yellow">
+                        <span class="icon">📃</span>
+                        <h3>Osebne beležke</h3>
+                        <p>Ustvari neomejeno lističev, jih kadarkoli uredi, izbriši ali pripni na vrh.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="listek green">
+                        <span class="icon">📌</span>
+                        <h3>Javna oglasna deska</h3>
+                        <p>Objavi listič za vse uporabnike, razvrščaj objave po datumu ali številu srčkov.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="listek pink">
+                        <span class="icon">🔍</span>
+                        <h3>Iskanje in račun</h3>
+                        <p>Hitro poišči listič po naslovu, na strani Moj račun pa si oglej podatke o svojem računu.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="home-actions">
+                {% if logged_in %}
+                <a class="btn btn-dark btn-lg" href="/notes/">Moje beležke</a>
+                <a class="btn btn-outline-dark btn-lg ml-2" href="/board/">Javna oglasna deska</a>
+                {% else %}
+                <a class="btn btn-dark btn-lg" href="/login/">Prijava</a>
+                <a class="btn btn-outline-dark btn-lg ml-2" href="/register/">Registracija</a>
+                {% endif %}
+            </div>
+        </div>
+    </main>
+
+    <footer class="fixed-bottom" style="background-color: black; padding: 15px; padding-bottom: 2px;">
+        <p style="text-align: center; color: white;">Beležka - Kajba</p>
+    </footer>
+</body>
+</html>

@@ -182,8 +182,10 @@ async def parse_request_data(request: Request, model_cls=None):
 
 
 @app.get("/", include_in_schema=False)
-async def root():
-    return RedirectResponse(url="/login/")
+async def root(request: Request):
+    session_id = request.cookies.get("session_id")
+    logged_in = bool(session_id and get_session(session_id))
+    return templates.TemplateResponse("home.html", {"request": request, "logged_in": logged_in})
 
 
 @app.get("/login", response_class=HTMLResponse)
