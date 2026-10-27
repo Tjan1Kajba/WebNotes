@@ -192,17 +192,6 @@
         </section>
     </main>
 
-    <footer
-        class="fixed-bottom"
-        style="background-color: black; padding: 12px 18px 10px; box-sizing: border-box; min-height: 52px; z-index: 50;"
-    >
-        <div style="position: relative; width: 100%; color: white; line-height: 1.4;">
-            <div style="text-align: center;">Beležka - Kajba</div>
-            <div style="position: absolute; right: 0; top: 0; white-space: nowrap;">
-                Dobrodošli, <b>{{ username }}</b>
-                <a style="text-decoration: underline; margin-left: 5px; color: white;" href="/logout/">Odjava</a>
-            </div>
-        </div>
-    </footer>
+    {% include "footer.html" with context %}
 </body>
 </html>

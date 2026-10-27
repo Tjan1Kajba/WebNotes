@@ -267,23 +267,7 @@
       </div>
     </div>
 
-    <footer
-      class="fixed-bottom"
-      style="background-color: black; padding: 12px 18px 10px; box-sizing: border-box; min-height: 52px; z-index: 50;"
-    >
-      <div style="position: relative; width: 100%; color: white; line-height: 1.4;">
-        <div style="text-align: center;">Beležka - Kajba</div>
-        <div style="position: absolute; right: 0; top: 0; white-space: nowrap;">
-          Dobrodošli, <b>{{ username or 'Gost' }}</b>
-          <a style="text-decoration: underline; margin-left: 5px; color: white;" href="/logout/">Odjava</a>
-        </div>
-      </div>
-      <div style="display: flex; justify-content: center; align-items: center; gap: 12px;">
-          <span style="color: white;">Beležka - Kajba</span>
-          <a href="/o-nas" style="color: white; text-decoration: underline; margin-left: 20px;">O nas</a>
-          <a href="/faq" style="color: white; text-decoration: underline; margin-left: 20px;">FAQ</a>
-      </div>
-    </footer>
+    {% include "footer.html" with context %}
 
     <script>
       document.addEventListener('DOMContentLoaded', () => {

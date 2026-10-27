@@ -1,0 +1,19 @@
+{# Shared site footer — identical on every page. #}
+{# The "Dobrodošli … Odjava" block renders only when a `username` is in context, #}
+{# i.e. on logged-in pages (/notes/, /profile, /board when authenticated). #}
+<footer class="fixed-bottom site-footer"
+        style="background-color: black; padding: 12px 18px 10px; box-sizing: border-box; min-height: 52px; z-index: 50; color: white;">
+  <div style="position: relative; width: 100%; line-height: 1.4;">
+    <div style="text-align: center;">Beležka - Kajba</div>
+    <div style="display: flex; justify-content: center; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 6px;">
+      <p style="margin: 0;"><a href="/o-nas" style="color: white; text-decoration: underline; margin-right: 20px;">O nas</a></p>
+      <p style="margin: 0;"><a href="/faq" style="color: white; text-decoration: underline; margin-left: 20px;">FAQ</a></p>
+    </div>
+    {% if username %}
+    <div style="position: absolute; right: 0; top: 0; white-space: nowrap;">
+      Dobrodošli, <b>{{ username }}</b>
+      <a style="text-decoration: underline; margin-left: 5px; color: white;" href="/logout/">Odjava</a>
+    </div>
+    {% endif %}
+  </div>
+</footer>

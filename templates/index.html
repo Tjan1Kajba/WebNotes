@@ -322,14 +322,6 @@
       }
     </script>
     <br /><br />
-    <footer class="fixed-bottom site-footer">
-      <div class="site-footer-inner">
-        <div style="text-align: center;">Beležka - Kajba</div>
-        <div style="position: absolute; right: 0; top: 0; white-space: nowrap;">
-          Dobrodošli, <b>{{ username or 'Gost' }}</b>
-          <a style="text-decoration: underline; margin-left: 5px;" href="/logout/">Odjava</a>
-        </div>
-      </div>
-    </footer>
+    {% include "footer.html" with context %}
   </body>
 </html>
