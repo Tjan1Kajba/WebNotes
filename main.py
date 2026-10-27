@@ -227,6 +227,20 @@ async def login(request: Request):
             cache_data = {"id": user_id, "username": username, "password_hash": password_hash}
             redis_client.setex(f"user:{username}", timedelta(hours=1), json.dumps(cache_data))
 
+        try:
+            login_conn = get_db_connection()
+            login_cursor = login_conn.cursor()
+            login_is_sqlite = login_conn.__class__.__module__.startswith("sqlite3")
+            login_cursor.execute(
+                "UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = ?" if login_is_sqlite
+                else "UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = %s",
+                (user_id,),
+            )
+            login_conn.commit()
+            login_conn.close()
+        except Exception:
+            pass
+
         session_id = create_session(user_id, username)
         response = JSONResponse({"message": "Login successful", "redirect_url": "/notes/"})
         response.set_cookie(
@@ -695,12 +709,56 @@ async def get_profile(request: Request, current_user: dict = Depends(require_aut
             active_sessions = redis_client.scard(f"{USER_SESSIONS_PREFIX}{current_user['user_id']}")
         except Exception:
             active_sessions = 0
+
+    created_at = last_login = None
+    notes_count = public_notes_count = hearts_received = 0
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        ph = "?" if conn.__class__.__module__.startswith("sqlite3") else "%s"
+        uid = current_user["user_id"]
+        cursor.execute(f"SELECT created_at, last_login FROM users WHERE id = {ph}", (uid,))
+        row = cursor.fetchone()
+        if row:
+            created_at, last_login = row
+        cursor.execute(
+            f"SELECT COUNT(*), COALESCE(SUM(CASE WHEN is_public THEN 1 ELSE 0 END), 0) FROM notes WHERE user_id = {ph}",
+            (uid,),
+        )
+        counts = cursor.fetchone()
+        notes_count, public_notes_count = int(counts[0]), int(counts[1])
+        cursor.execute(
+            f"SELECT COUNT(*) FROM note_hearts h JOIN notes n ON n.id = h.note_id WHERE n.user_id = {ph}",
+            (uid,),
+        )
+        hearts_received = int(cursor.fetchone()[0])
+        cursor.close()
+        conn.close()
+    except Exception:
+        pass
+
+    def fmt(value):
+        if not value:
+            return "ni podatka"
+        if isinstance(value, str):
+            try:
+                value = datetime.fromisoformat(value)
+            except ValueError:
+                return value
+        return value.strftime("%d. %m. %Y %H:%M")
+
     return templates.TemplateResponse(
         "profile.html",
         {
             "request": request,
             "username": current_user["username"],
             "user_id": current_user["user_id"],
+            "created_at": fmt(created_at),
+            "last_login": fmt(last_login),
+            "last_activity": fmt(current_user.get("last_activity") or datetime.now()),
+            "notes_count": notes_count,
+            "public_notes_count": public_notes_count,
+            "hearts_received": hearts_received,
             "active_sessions": active_sessions,
             "redis_available": redis_available,
         },
