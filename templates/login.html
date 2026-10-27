@@ -134,14 +134,9 @@
         </div>
         <div class="col-md-5 listek" style="margin-left: 25px;">
             <div class="form-container">
-                <h2>Registracija</h2>
-                <form id="registerForm">
-                    <label for="reg_username">Uporabniško ime:</label>
-                    <input type="text" id="reg_username" name="username">
-                    <label for="reg_password">Geslo:</label>
-                    <input type="password" id="reg_password" name="password">
-                    <input type="submit" value="Registracija">
-                </form>
+                <h2>Še nimaš računa?</h2>
+                <p>Ustvari račun za shranjevanje svojih beležk.</p>
+                <a class="btn btn-primary btn-block" href="/register/">Registracija</a>
             </div>
         </div>
     </div>
@@ -179,25 +174,6 @@
             });
         });
 
-        $('#registerForm').submit(function (e) {
-            e.preventDefault(); 
-            var formData = {
-                username: $('#reg_username').val(),
-                password: $('#reg_password').val()
-            };
-            $.ajax({
-                type: 'POST',
-                url: '/register/',
-                data: JSON.stringify(formData),
-                contentType: 'application/json',
-                success: function (response) {
-                    alert('Registration Successful');
-                },
-                error: function (xhr, status, error) {
-                    alert('Error: ' + xhr.responseJSON.detail);
-                }
-            });
-        });
     });
 </script>
 <br><br>

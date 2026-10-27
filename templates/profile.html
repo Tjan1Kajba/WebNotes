@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="sl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Moj profil</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body { padding-top: 90px; padding-bottom: 80px; background: #ececec; }
+        .profile-card { max-width: 650px; margin: 0 auto; padding: 30px; background: white; border: 3px solid #000; box-shadow: 5px 5px 0 #777; }
+        .profile-row { display: flex; justify-content: space-between; padding: 14px 0; border-bottom: 1px solid #ddd; }
+        .profile-row:last-child { border-bottom: 0; }
+    </style>
+</head>
+<body>
+    {% include "header.html" with context %}
+    <main class="container">
+        <div class="profile-card">
+            <h1>Moj profil</h1>
+            <div class="profile-row"><strong>Uporabniško ime</strong><span>{{ username }}</span></div>
+            <div class="profile-row"><strong>ID uporabnika</strong><span>{{ user_id }}</span></div>
+            <div class="profile-row"><strong>Aktivne seje</strong><span>{{ active_sessions }}</span></div>
+            <div class="profile-row"><strong>Povezava z Redisom</strong><span>{{ "omogočena" if redis_available else "ni na voljo" }}</span></div>
+            <a class="btn btn-primary mt-4" href="/notes/">Nazaj na moje beležke</a>
+        </div>
+    </main>
+    <footer class="fixed-bottom" style="background-color: black; padding: 15px; color: white; text-align: center;">Beležka - Kajba</footer>
+</body>
+</html>

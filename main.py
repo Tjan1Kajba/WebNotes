@@ -195,6 +195,15 @@ async def get_login_page(request: Request):
     return templates.TemplateResponse("login.html", {"request": request})
 
 
+@app.get("/register", response_class=HTMLResponse)
+@app.get("/register/", response_class=HTMLResponse)
+async def get_register_page(request: Request):
+    session_id = request.cookies.get("session_id")
+    if session_id and get_session(session_id):
+        return RedirectResponse(url="/notes/")
+    return templates.TemplateResponse("register.html", {"request": request})
+
+
 @app.post("/login")
 @app.post("/login/")
 async def login(request: Request):
@@ -678,20 +687,24 @@ async def search_notes(request: Request, current_user: dict = Depends(require_au
     )
 
 
-@app.get("/profile")
-async def get_profile(current_user: dict = Depends(require_auth)):
+@app.get("/profile", response_class=HTMLResponse)
+async def get_profile(request: Request, current_user: dict = Depends(require_auth)):
     active_sessions = 0
     if redis_available and redis_client is not None:
         try:
             active_sessions = redis_client.scard(f"{USER_SESSIONS_PREFIX}{current_user['user_id']}")
         except Exception:
             active_sessions = 0
-    return {
-        "username": current_user["username"],
-        "user_id": current_user["user_id"],
-        "active_sessions": active_sessions,
-        "redis_available": redis_available,
-    }
+    return templates.TemplateResponse(
+        "profile.html",
+        {
+            "request": request,
+            "username": current_user["username"],
+            "user_id": current_user["user_id"],
+            "active_sessions": active_sessions,
+            "redis_available": redis_available,
+        },
+    )
 
 
 @app.get("/health")
