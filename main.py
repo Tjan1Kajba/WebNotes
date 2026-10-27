@@ -218,6 +218,12 @@ async def get_faq_page(request: Request):
     return templates.TemplateResponse("faq.html", {"request": request})
 
 
+@app.get("/404", response_class=HTMLResponse)
+@app.get("/404/", response_class=HTMLResponse)
+async def get_404_page(request: Request):
+    return templates.TemplateResponse("404.html", {"request": request})
+
+
 @app.post("/login")
 @app.post("/login/")
 async def login(request: Request):

@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="sl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>404 - Stran ni najdena</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="icon" href="https://icons.iconarchive.com/icons/wwalczyszyn/android-style/256/Notes-icon.png" type="image/x-icon">
+    <style>
+        html, body {
+            margin: 0;
+            min-height: 100%;
+            background: #ececec;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            padding-top: 76px;
+            padding-bottom: 90px;
+        }
+
+        .box {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 40px 30px 40px;
+            text-align: center;
+            color: #111;
+        }
+
+        .box h1 {
+            font-size: 48px;
+            margin-bottom: 20px;
+            color: #cc0000;
+        }
+
+        .box p {
+            font-size: 20px;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .box .btn {
+            margin-top: 20px;
+            padding: 12px 30px;
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+    {% include "header.html" with context %}
+
+    <main class="box">
+        <h1>404</h1>
+        <p>Stran, ki iščete, ni mogoče najti.</p>
+        <p>Preverite, ali ste vnesli pravilen naslov.</p>
+        <a class="btn btn-primary" href="/">Nazaj na domov</a>
+    </main>
+
+    <footer class="fixed-bottom" style="background-color: black; padding: 15px; padding-bottom: 2px;">
+        <p style="text-align: center; color: white;">Beležka - Kajba</p>
+    </footer>
+</body>
+</html>
