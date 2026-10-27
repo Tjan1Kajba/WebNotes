@@ -184,10 +184,14 @@ async def parse_request_data(request: Request, model_cls=None):
 @app.get("/", include_in_schema=False)
 async def root(request: Request):
     session_id = request.cookies.get("session_id")
-    logged_in = bool(session_id and get_session(session_id))
-    return templates.TemplateResponse("home.html", {"request": request, "logged_in": logged_in})
+    session = get_session(session_id) if session_id else None
+    logged_in = bool(session)
 
+    context = {"request": request, "logged_in": logged_in}
+    if session:
+        context["username"] = session["username"]
 
+    return templates.TemplateResponse("home.html", context)
 @app.get("/login", response_class=HTMLResponse)
 @app.get("/login/", response_class=HTMLResponse)
 async def get_login_page(request: Request):
