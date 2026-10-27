@@ -30,7 +30,17 @@
     height: 340px;
     width: auto;
     z-index: 1;
-    pointer-events: none;
+    pointer-events: auto;
+  }
+
+  .site-header-logo-link {
+    position: absolute;
+    left: 50%;
+    top: 0;
+    transform: translateX(-50%);
+    width: 300px;
+    height: 96px;
+    z-index: 3;
   }
 
   .site-header-content {
@@ -49,6 +59,7 @@
     src="/Slike/SAN30101PP.png"
     alt="SAN30101PP"
   />
+  <a class="site-header-logo-link" href="/" title="Domov" aria-label="Domov"></a>
   <div class="d-flex justify-content-between align-items-center w-100 site-header-content">
     <div class="d-flex align-items-center">
       <a class="navbar-brand site-header-link" href="/notes/">BELEŽKA</a>

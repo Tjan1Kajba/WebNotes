@@ -193,7 +193,7 @@ async def root(request: Request):
 async def get_login_page(request: Request):
     session_id = request.cookies.get("session_id")
     if session_id and get_session(session_id):
-        return RedirectResponse(url="/notes/")
+        return RedirectResponse(url="/")
     return templates.TemplateResponse("login.html", {"request": request})
 
 
@@ -202,7 +202,7 @@ async def get_login_page(request: Request):
 async def get_register_page(request: Request):
     session_id = request.cookies.get("session_id")
     if session_id and get_session(session_id):
-        return RedirectResponse(url="/notes/")
+        return RedirectResponse(url="/")
     return templates.TemplateResponse("register.html", {"request": request})
 
 
@@ -244,7 +244,7 @@ async def login(request: Request):
             pass
 
         session_id = create_session(user_id, username)
-        response = JSONResponse({"message": "Login successful", "redirect_url": "/notes/"})
+        response = JSONResponse({"message": "Login successful", "redirect_url": "/"})
         response.set_cookie(
             key="session_id",
             value=session_id,
