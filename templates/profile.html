@@ -3,27 +3,173 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Moj profil</title>
+    <title>Moj račun</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <style>
-        body { padding-top: 90px; padding-bottom: 80px; background: #ececec; }
-        .profile-card { max-width: 650px; margin: 0 auto; padding: 30px; background: white; border: 3px solid #000; box-shadow: 5px 5px 0 #777; }
-        .profile-row { display: flex; justify-content: space-between; padding: 14px 0; border-bottom: 1px solid #ddd; }
-        .profile-row:last-child { border-bottom: 0; }
+        html, body {
+            margin: 0;
+            min-height: 100%;
+            background: #ececec;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            padding-top: 76px;
+            padding-bottom: 90px;
+        }
+
+        .board-shell {
+            position: relative;
+            background: #f4f1eb;
+            border: 8px solid #000000;
+            box-shadow: inset 0 0 0 2px #d9c7a9;
+            width: 97%;
+            min-height: 430px;
+            margin: 0 auto 12px;
+            padding: 28px 30px 38px;
+            box-sizing: border-box;
+        }
+
+        .corner {
+            position: absolute;
+            width: 34px;
+            height: 34px;
+            border: 10px solid gray;
+            background: transparent;
+            z-index: 1;
+            box-sizing: border-box;
+        }
+
+        .corner.tl {
+            top: -6px;
+            left: -6px;
+            border-right: none;
+            border-bottom: none;
+        }
+
+        .corner.tr {
+            top: -6px;
+            right: -6px;
+            border-left: none;
+            border-bottom: none;
+        }
+
+        .corner.bl {
+            bottom: -6px;
+            left: -6px;
+            border-right: none;
+            border-top: none;
+        }
+
+        .corner.br {
+            bottom: -6px;
+            right: -6px;
+            border-left: none;
+            border-top: none;
+        }
+
+        .profile-heading {
+            margin: 0 auto 24px;
+            max-width: 760px;
+            padding-bottom: 12px;
+            border-bottom: 3px solid #111;
+            font-size: 30px;
+            font-weight: 700;
+        }
+
+        .profile-note {
+            position: relative;
+            max-width: 760px;
+            min-height: 285px;
+            margin: 0 auto;
+            padding: 26px 30px 30px;
+            background: #8ecf9d;
+            border-radius: 0 0 0 30px/45px;
+            box-shadow:
+                inset 0 -40px 40px rgba(0, 0, 0, 0.2),
+                inset 0 25px 10px rgba(0, 0, 0, 0.2),
+                0 5px 6px 5px rgba(0, 0, 0, 0.2);
+            box-sizing: border-box;
+        }
+
+        .profile-note:before {
+            content: "";
+            position: absolute;
+            width: 20px;
+            height: 25px;
+            left: 0;
+            bottom: 0;
+            background: inherit;
+            box-shadow: 3px -2px 10px rgba(0, 0, 0, 0.2), inset 15px -15px 15px rgba(0, 0, 0, 0.3);
+            transform: skewX(25deg);
+        }
+
+        .profile-note:after {
+            content: "";
+            position: absolute;
+            width: 75%;
+            height: 20px;
+            left: 10%;
+            bottom: 0;
+            border-top: 3px solid black;
+            border-radius: 50%;
+        }
+
+        .profile-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.35);
+            font-size: 17px;
+        }
+
+        .profile-row:last-of-type {
+            border-bottom: none;
+        }
+
+        .profile-actions {
+            position: relative;
+            z-index: 1;
+        }
     </style>
 </head>
 <body>
     {% include "header.html" with context %}
-    <main class="container">
-        <div class="profile-card">
-            <h1>Moj profil</h1>
+
+    <main class="board-shell">
+        <span class="corner tl"></span>
+        <span class="corner tr"></span>
+        <span class="corner bl"></span>
+        <span class="corner br"></span>
+
+        <h1 class="profile-heading">Moj račun</h1>
+        <section class="profile-note">
             <div class="profile-row"><strong>Uporabniško ime</strong><span>{{ username }}</span></div>
             <div class="profile-row"><strong>ID uporabnika</strong><span>{{ user_id }}</span></div>
             <div class="profile-row"><strong>Aktivne seje</strong><span>{{ active_sessions }}</span></div>
-            <div class="profile-row"><strong>Povezava z Redisom</strong><span>{{ "omogočena" if redis_available else "ni na voljo" }}</span></div>
-            <a class="btn btn-primary mt-4" href="/notes/">Nazaj na moje beležke</a>
-        </div>
+            <div class="profile-row">
+                <strong>Povezava z Redisom</strong>
+                <span>{{ "omogočena" if redis_available else "ni na voljo" }}</span>
+            </div>
+            <div class="profile-actions mt-4">
+                <a class="btn btn-dark" href="/notes/">Moje beležke</a>
+                <a class="btn btn-outline-dark ml-2" href="/board/">Javna oglasna deska</a>
+            </div>
+        </section>
     </main>
-    <footer class="fixed-bottom" style="background-color: black; padding: 15px; color: white; text-align: center;">Beležka - Kajba</footer>
+
+    <footer
+        class="fixed-bottom"
+        style="background-color: black; padding: 12px 18px 10px; box-sizing: border-box; min-height: 52px; z-index: 50;"
+    >
+        <div style="position: relative; width: 100%; color: white; line-height: 1.4;">
+            <div style="text-align: center;">Beležka - Kajba</div>
+            <div style="position: absolute; right: 0; top: 0; white-space: nowrap;">
+                Dobrodošli, <b>{{ username }}</b>
+                <a style="text-decoration: underline; margin-left: 5px; color: white;" href="/logout/">Odjava</a>
+            </div>
+        </div>
+    </footer>
 </body>
 </html>
